@@ -1,4 +1,7 @@
-const authService = require('../services/auth.service');
+const User=require("../models/userSchema");
+const bcrypt=require("bcrypt");
+const generateToken=require("../utils/generateToken");
+const authService = require("../services/auth.service");
 // استرجاع IP من الريكويست
 const getIP = (req) =>
   req.ip ||
@@ -7,6 +10,78 @@ const getIP = (req) =>
   'unknown';
 
 const authController = {
+  async register(req, res, next) {
+    try {
+      const { name, email, password, city } = req.body;
+
+      if (!name || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "All fields are required",
+        });
+      }
+
+      const existingUser = await User.findOne({
+        email: email.toLowerCase(),
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: "User already exists",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = new User({
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        city
+      });
+
+      await user.save();
+
+      const token = generateToken(user);
+
+      return res.status(201).json({
+        success: true,
+        message: "Registered successfully",
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async googleCallback(req, res) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Google authentication failed",
+        });
+      }
+
+      const token = generateToken(req.user);
+
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/auth-success?token=${token}`
+      );
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error processing Google login",
+      });
+    }
+  },
+  
   // POST /auth/login
   async login(req, res, next) {
     try {

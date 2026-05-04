@@ -1,12 +1,14 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, EmailOTP, RefreshToken } = require('../schemas');
+const User = require("../models/userSchema");
+const EmailOTP = require("../models/email-otp.schema");
+const RefreshToken = require("../models/refresh-token.schema");
 const emailService = require('./email.service');
 
 const sha256 = (text) =>
   crypto.createHash('sha256').update(text).digest('hex');
-
+ 
 const generateOTP = () =>
   crypto.randomInt(100000, 1000000).toString();
 

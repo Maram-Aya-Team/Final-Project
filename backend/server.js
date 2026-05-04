@@ -1,13 +1,20 @@
-require('dotenv').config();
-
+require("dotenv").config();
 const express= require('express');
-const mongoose= require('mongoose');
 const cookieParser = require('cookie-parser');
 const helmet= require('helmet');
 const morgan= require('morgan');
 const cors= require('cors');
-const authRoutes = require('./routes/auth.routes');
-const app= express();
+const connectDB = require("./config/db");
+
+
+const userSchema = require("./models/userSchema");
+const refreshTokenSchema = require("./models/refresh-token.schema");
+const emailOTPSchema = require("./models/email-otp.schema");
+const passport=require("./config/google");
+const authRoutes=require("./routes/authRoutes");
+
+const app = express();
+
 const PORT = process.env.PORT || 5000;
 
 //security
@@ -15,6 +22,7 @@ app.use(helmet());
 app.set('trust proxy', 1);
 //parsers
 app.use(express.json());
+app.use(cors());
 app.use(cookieParser());
 //corse
 app.use(cors({
@@ -25,8 +33,10 @@ app.use(cors({
 }));
 //logging
 app.use(morgan('dev'));
-//routes
-app.use('/auth', authRoutes);
+
+app.use(passport.initialize());
+app.use("/auth", authRoutes);
+
 //health
 app.get('/', (req, res) => {
   res.json({ success: true, message: 'FoundIt JO Backend is running' });
@@ -41,21 +51,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
   });
-});
-//db+start
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-.then(() => {
-  console.log('✅ Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(` Server running on port ${PORT}`);
-  });
-})
-.catch((err) => {
-  console.error(' MongoDB connection failed:', err.message);
-  process.exit(1);
 });
 
 module.exports = app;

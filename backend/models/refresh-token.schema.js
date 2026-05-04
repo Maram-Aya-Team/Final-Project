@@ -74,6 +74,5 @@ RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 //فيتش الجلسات النشطة للمستخدم بسرعة
 RefreshTokenSchema.index({ user: 1, isActive: 1 });
 // التحقق السريع من التوكن
-RefreshTokenSchema.index({ tokenHash: 1 }, { unique: true });
-
+//في سطر هون كان عامل ايرور وبعد البحث حذفته
 module.exports = mongoose.model('RefreshToken', RefreshTokenSchema);
