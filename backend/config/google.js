@@ -15,23 +15,30 @@ passport.use(
                 return done(new Error("Google account does not provide an email."));
         }
 
-        const user = await User.findOne({ email });
+        let user = await User.findOne({ email });
+
+        if (!user) {
+          user = await User.create({
+            name: profile.displayName,
+            email,
+            avatar: profile.photos?.[0]?.value || null,
+            googleId: profile.id,
+            password: null,
+            isEmailVerified: true,
+          });
+        } else {
+          user.googleId = user.googleId || profile.id;
+          user.avatar = user.avatar || profile.photos?.[0]?.value || null;
+          user.isEmailVerified = true;
+          await user.save();
+        }
+
         return done(null, user);
-        } catch (error) {
-        return done(error);
+        } catch (err) {
+        return done(err);
        }
     },
   ),
 );
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-    User.findById(id)
-    .then((user) => done(null, user))
-    .catch((error) => done(error, null));
-});
 
 module.exports = passport;
