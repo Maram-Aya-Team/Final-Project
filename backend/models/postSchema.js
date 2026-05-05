@@ -62,7 +62,7 @@ const postSchema=new mongoose.Schema({
                 }
                 return true;
             },
-            message: "Reward is only allowed for lost posts";
+            message: "Reward is only allowed for lost posts"
         },
     },
     contactPhone:{

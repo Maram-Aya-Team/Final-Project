@@ -7,22 +7,20 @@ const cors= require('cors');
 const connectDB = require("./config/db");
 
 
-const userSchema = require("./models/userSchema");
-const refreshTokenSchema = require("./models/refresh-token.schema");
-const emailOTPSchema = require("./models/email-otp.schema");
 const passport=require("./config/google");
 const authRoutes=require("./routes/authRoutes");
-
+const postRoutes=require("./routes/postRoutes");
+require("./models/categorySchema");
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+
 
 //security
 app.use(helmet());
 app.set('trust proxy', 1);
 //parsers
 app.use(express.json());
-app.use(cors());
 app.use(cookieParser());
 //corse
 app.use(cors({
@@ -36,6 +34,7 @@ app.use(morgan('dev'));
 
 app.use(passport.initialize());
 app.use("/auth", authRoutes);
+app.use("/posts", postRoutes);
 
 //health
 app.get('/', (req, res) => {
@@ -52,5 +51,9 @@ app.use((err, req, res, next) => {
     message: err.message || 'Internal Server Error',
   });
 });
+
+app.listen(PORT, ()=>{
+  console.log(`Server running on port:${PORT}`);
+})
 
 module.exports = app;
