@@ -17,8 +17,11 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      minlength: 6,
       default: null,
+      validate: {
+        validator: (value) => value == null || value.length >= 6,
+        message: "Password must be at least 6 characters",
+      },
     },
     googleId: {
       type: String,
