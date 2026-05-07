@@ -14,14 +14,18 @@ const userSchema = new mongoose.Schema(
       trim: true,
       unique: true,
       lowercase: true,
-      trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: false,
       minlength: 6,
+      default: null,
     },
     googleId: {
+      type: String,
+      default: null,
+    },
+    avatar: {
       type: String,
       default: null,
     },

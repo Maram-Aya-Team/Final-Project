@@ -1,5 +1,2 @@
-const mongoose = require("mongoose");
-
-mongoose.connect(process.env.DATABASE_URL)
-    .then(() => console.log("DB Connected Sucessfully"))
-    .catch((err) =>{ console.log(err); });
+// الاتصال بقاعدة البيانات يتم مباشرة في server.js باستخدام MONGO_URI
+// هذا الملف متروك هنا كمرجع فقط
