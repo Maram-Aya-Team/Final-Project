@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const authController = require('../controllers/authController');
+
+const requireGoogleOAuth = (req, res, next) => {
+  if (!passport.isGoogleOAuthConfigured) {
+    return res.status(503).json({
+      success: false,
+      message: 'Google OAuth is not configured on server',
+    });
+  }
+  return next();
+};
 //POST
 router.post('/register', authController.register);
 router.post('/login', authController.login);
@@ -10,8 +20,9 @@ router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 
 // Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+router.get('/google', requireGoogleOAuth, passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
 router.get('/google/callback',
+  requireGoogleOAuth,
   passport.authenticate('google', { session: false, failureRedirect: '/auth/failed' }),
   authController.googleCallback
 );
