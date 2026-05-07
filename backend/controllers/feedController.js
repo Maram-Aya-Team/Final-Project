@@ -1,6 +1,6 @@
 const feedService = require('../services/feedService'); 
 const { asyncHandler, sendSuccess, sendError } = require('../utils/helpers');
-const { emitNewLike, emitNewComment, emitUpdatePost } = require('../sockets/socket');
+const { emitNewLike, emitNewComment, emitUpdatePost } = require('../sockets/feedHandler');
 
 const feedController = {
 
