@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 // إعداد الـ transporter مرة وحدة
 const transporter = nodemailer.createTransport({
@@ -77,4 +77,4 @@ const emailService = {
   },
 };
 
-module.exports = emailService;
+export default emailService;
