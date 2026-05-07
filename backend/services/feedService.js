@@ -1,7 +1,5 @@
-// استدعاء الموديلات - تأكدي أن الأسماء تطابق ملفاتك في مجلد models
-const LostItem = require('../models/lostItemSchema'); 
-const FoundItem = require('../models/foundItemSchema');
-const User = require('../models/userSchema');
+// استدعاء الموديل الموحد للبوستات
+const Post = require('../models/postSchema');
 
 const cache = require('../utils/cache');
 
@@ -31,9 +29,11 @@ const decodeCursor = (cursor) => {
 };
 
 // نبني filter حسب الفلاتر المطلوبة
-const buildFilter = ({ city, category, cursor }) => {
+const buildFilter = ({ type, city, category, cursor }) => {
 
   const filter = { status: 'approved', isResolved: false };
+
+  if (type && type !== 'all') filter.type = type;
 
   if (city && city !== 'all') filter.city = city;
 
@@ -62,7 +62,7 @@ const POPULATE = [
 ];
 
 // نجيب الحقول المهمة فقط عشان الاداء
-const PROJECTION = { title: 1, description: 1, images: 1, city: 1, area: 1, location: 1, status: 1, isResolved: 1, lostDate: 1, foundDate: 1, reward: 1, likesCount: 1, commentsCount: 1, viewsCount: 1, rankScore: 1, createdAt: 1, lastActivityAt: 1, user: 1, category: 1 };
+const PROJECTION = { type: 1, title: 1, description: 1, images: 1, city: 1, area: 1, location: 1, status: 1, isResolved: 1, itemDate: 1, reward: 1, likesCount: 1, commentsCount: 1, viewsCount: 1, rankScore: 1, createdAt: 1, lastActivityAt: 1, user: 1, category: 1 };
 
 const feedService = {
 
@@ -85,46 +85,15 @@ const feedService = {
       };
     }
 
-    const filter = buildFilter({ city, category, cursor });
+    const filter = buildFilter({ type, city, category, cursor });
 
-    // نجيب زيادة شوي قبل الدمج والترتيب
-    const batchSize = Math.ceil(limit * 1.5);
-
-    // نجيب lost + found بنفس الوقت
-    const [lostDocs, foundDocs] = await Promise.all([
-
-      type !== 'found'
-        ? LostItem.find(filter, PROJECTION)
-            .populate(POPULATE)
-            .sort({ rankScore: -1, _id: -1 })
-            .limit(batchSize)
-            .lean()
-        : Promise.resolve([]),
-
-      type !== 'lost'
-        ? FoundItem.find(filter, PROJECTION)
-            .populate(POPULATE)
-            .sort({ rankScore: -1, _id: -1 })
-            .limit(batchSize)
-            .lean()
-        : Promise.resolve([]),
-    ]);
-
-    // نضيف type لكل بوست و ندمجهم
-    const merged = [
-      ...lostDocs.map(doc => ({ ...doc, type: 'lost' })),
-      ...foundDocs.map(doc => ({ ...doc, type: 'found' })),
-    ].sort((a, b) =>
-      b.rankScore !== a.rankScore
-        ? b.rankScore - a.rankScore
-        : b._id.toString().localeCompare(a._id.toString())
-    );
-
-    // نأخذ العدد المطلوب فقط
-    const posts = merged.slice(0, limit);
+    const posts = await Post.find(filter, PROJECTION)
+      .populate(POPULATE)
+      .sort({ rankScore: -1, _id: -1 })
+      .limit(limit)
+      .lean();
 
     let usedFallback = false;
-
     let finalPosts = posts;
 
     // اذا البوستات قليلة نجيب بيانات خارجية
@@ -139,7 +108,14 @@ const feedService = {
         limit: needed + 5,
       });
 
-      finalPosts = [...posts, ...fallback.posts].slice(0, limit);
+      finalPosts = [...posts, ...fallback.posts]
+        .sort((a, b) => {
+          const aScore = a.rankScore || 0;
+          const bScore = b.rankScore || 0;
+          if (bScore !== aScore) return bScore - aScore;
+          return b._id.toString().localeCompare(a._id.toString());
+        })
+        .slice(0, limit);
 
       usedFallback = true;
     }
@@ -153,7 +129,7 @@ const feedService = {
 
       // البوستات الخارجية ما بنعملها cursor
       if (!last.isFallback && last._id) {
-        nextCursor = encodeCursor(last.rankScore, last._id.toString());
+        nextCursor = encodeCursor(last.rankScore || 0, last._id.toString());
       }
     }
 
@@ -176,9 +152,7 @@ const feedService = {
   // like / unlike
   async toggleLike(postId, postType, userId) {
 
-    const Model = postType === 'lost' ? LostItem : FoundItem;
-
-    const post = await Model.findById(postId);
+    const post = await Post.findOne({ _id: postId, type: postType });
 
     if (!post) {
       throw {
@@ -188,25 +162,20 @@ const feedService = {
     }
 
     // هل المستخدم عامل لايك؟
-    const alreadyLiked = post.likes.includes(userId);
+    const alreadyLiked = post.likes.some(id =>
+      id?.equals ? id.equals(userId) : id.toString() === userId.toString()
+    );
 
     if (alreadyLiked) {
 
       // unlike
       post.likes.pull(userId);
 
-      post.likesCount = Math.max(0, post.likesCount - 1);
-
     } else {
 
       // like
       post.likes.addToSet(userId);
-
-      post.likesCount += 1;
     }
-
-    // تحديث ترتيب البوست
-    post.computeRankScore();
 
     await post.save();
 
@@ -230,9 +199,7 @@ const feedService = {
       };
     }
 
-    const Model = postType === 'lost' ? LostItem : FoundItem;
-
-    const post = await Model.findById(postId);
+    const post = await Post.findOne({ _id: postId, type: postType });
 
     if (!post) {
       throw {
@@ -247,11 +214,6 @@ const feedService = {
     };
 
     post.comments.push(comment);
-
-    post.commentsCount += 1;
-
-    // تحديث ترتيب البوست
-    post.computeRankScore();
 
     await post.save();
 
@@ -268,10 +230,8 @@ const feedService = {
   // جلب بوست واحد
   async getPostById(postId, postType, userId) {
 
-    const Model = postType === 'lost' ? LostItem : FoundItem;
-
-    const post = await Model.findByIdAndUpdate(
-      postId,
+    const post = await Post.findOneAndUpdate(
+      { _id: postId, type: postType },
       { $inc: { viewsCount: 1 } },
       { new: true }
     )
@@ -304,45 +264,35 @@ const feedService = {
   // cron job لتحديث rank score يوميا
   async recomputeAllRankScores() {
 
-    const process = async (Model) => {
+    const posts = await Post.find({
+      status: 'approved',
+      isResolved: false,
+    });
 
-      const posts = await Model.find({
-        status: 'approved',
-        isResolved: false,
-      });
+    // تجهيز bulk updates
+    const bulk = posts.map(post => ({
+      updateOne: {
+        filter: { _id: post._id },
 
-      // تجهيز bulk updates
-      const bulk = posts.map(post => ({
-        updateOne: {
-          filter: { _id: post._id },
-
-          update: {
-            $set: {
-              rankScore: post.computeRankScore(),
-            },
+        update: {
+          $set: {
+            rankScore: post.computeRankScore(),
           },
         },
-      }));
+      },
+    }));
 
-      // bulkWrite اسرع من save لكل بوست
-      if (bulk.length) {
-        await Model.bulkWrite(bulk);
-      }
-
-      return bulk.length;
-    };
-
-    const [lostCount, foundCount] = await Promise.all([
-      process(LostItem),
-      process(FoundItem),
-    ]);
+    // bulkWrite اسرع من save لكل بوست
+    if (bulk.length) {
+      await Post.bulkWrite(bulk);
+    }
 
     // تنظيف الكاش بعد التحديث
     cache.del('feed:*');
 
     return {
-      lostCount,
-      foundCount,
+      lostCount: posts.filter(post => post.type === 'lost').length,
+      foundCount: posts.filter(post => post.type === 'found').length,
     };
   },
 };
