@@ -97,10 +97,20 @@ postSchema.pre("save", function (next) {
   if (this.type === "found" && this.reward !== 0) {
     this.reward = 0;
   }
-  this.likesCount = this.likes?.length || 0;
-  this.commentsCount = this.comments?.length || 0;
-  this.lastActivityAt = new Date();
-  this.rankScore = this.computeRankScore();
+  const interactionChanged =
+    this.isNew || this.isModified("likes") || this.isModified("comments");
+  const shouldRecomputeRank =
+    interactionChanged || this.isModified("type") || this.isModified("createdAt");
+
+  if (interactionChanged) {
+    this.likesCount = this.likes?.length || 0;
+    this.commentsCount = this.comments?.length || 0;
+    this.lastActivityAt = new Date();
+  }
+
+  if (shouldRecomputeRank) {
+    this.rankScore = this.computeRankScore();
+  }
   next();
 });
 
