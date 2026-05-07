@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { authAPI } from '../services/auth.api';
-import styles from '../styles/auth.module.css';
+import { authAPI } from '../../../services/auth.api';
+import styles from '../../../styles/auth.module.css';
 import { FiMail, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 const OTP_LENGTH = 6;
 export default function OTPPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [purpose, setPurpose] = useState('login');
+  const email = typeof window !== 'undefined' ? sessionStorage.getItem('otp_email') || '' : '';
+  const purpose = typeof window !== 'undefined' ? sessionStorage.getItem('otp_purpose') || 'login' : 'login';
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,27 +20,8 @@ export default function OTPPage() {
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
-  // استرجاع الإيميل
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem('otp_email');
-    const storedPurpose = sessionStorage.getItem('otp_purpose') || 'login';
-
-    if (!storedEmail) {
-      router.replace('/login');
-      return;
-    }
-    setEmail(storedEmail);
-    setPurpose(storedPurpose);
-
-    return () => clearInterval(timerRef.current);
-  }, [router]);
-
-  //تايمر
-  const startTimer = useCallback(() => {
+  const setupCountdownInterval = useCallback(() => {
     clearInterval(timerRef.current);
-    setTimerSeconds(60);
-    setCanResend(false);
-
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
         if (prev <= 1) {
@@ -54,11 +35,26 @@ export default function OTPPage() {
   }, []);
 
   useEffect(() => {
-    if (email) {
-      startTimer();
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+    if (!email) {
+      router.replace('/login');
     }
-  }, [email, startTimer]);
+  }, [email, router]);
+
+  //تايمر
+  const startTimer = useCallback(() => {
+    setTimerSeconds(60);
+    setCanResend(false);
+    setupCountdownInterval();
+  }, [setupCountdownInterval]);
+
+  useEffect(() => {
+    if (!email) return;
+
+    setupCountdownInterval();
+    setTimeout(() => inputRefs.current[0]?.focus(), 100);
+
+    return () => clearInterval(timerRef.current);
+  }, [email, setupCountdownInterval]);
 
   // تغيير OTP
   const handleOtpChange = (index, value) => {

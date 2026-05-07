@@ -44,7 +44,7 @@ export const authAPI = {
   async resendOTP(email, purpose = 'login') {
     return apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, resendOTP: true }),
+      body: JSON.stringify({ email, purpose, resendOTP: true }),
     });
   },
  
