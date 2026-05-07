@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authAPI } from '../services/auth.api';
-import styles from '../styles/auth.module.css';
+import { authAPI } from '../../../services/auth.api';
+import styles from '../../../styles/auth.module.css';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 
@@ -30,7 +30,7 @@ export default function LoginPage() {
   };
 
   // تسجيل الدخول
-  const handleLogin = useCallback(async (e) => {
+  const handleLogin = async (e) => {
     e?.preventDefault();
     setError('');
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
       }} 
       catch (err) {setError(err.message || 'Login failed. Please try again.');}
        finally {setLoading(false);}
-  }, [email, password, router]);
+  };
 
   return (
     <div className={styles.pageWrapper}>

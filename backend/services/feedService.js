@@ -1,104 +1,37 @@
-<<<<<<< Updated upstream
-// استدعاء الموديل الموحد للبوستات
 const Post = require('../models/postSchema');
-=======
-const feedService = require('../services/feedService'); 
-const { asyncHandler, sendSuccess, sendError } = require('../utils/helpers');
-const { emitNewLike, emitNewComment, emitUpdatePost } = require('../sockets/feedHandler');
->>>>>>> Stashed changes
+const cache = require('../utils/cache');
+const { getFallbackPosts } = require('./externalFallback');
 
-const feedController = {
+const FEED_LIMIT_DEFAULT = 12;
+const FEED_LIMIT_MAX = 30;
 
-  // جلب المنشورات مع فلاتر ودعم السكرول اللانهائي
-  getFeed: asyncHandler(async (req, res) => {
-    const { type, city, category, cursor, limit } = req.query;
-    const userId = req.user?._id;
+const encodeCursor = (rankScore, id) =>
+  Buffer.from(JSON.stringify({ rankScore, id }), 'utf8').toString('base64url');
 
-    const result = await feedService.getFeed({ type, city, category, cursor, limit, userId });
+const decodeCursor = (cursor) => {
+  try {
+    const decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
 
-    return res.status(200).json({
-      success: true,
-      data: result.posts,
-      pagination: {
-        nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
-        count: result.count,
-        usedFallback: result.usedFallback,
-      },
-      fromCache: result.fromCache || false,
-    });
-  }),
-
-  // جلب تفاصيل بوست واحد
-  getPost: asyncHandler(async (req, res) => {
-    const { type, id } = req.params;
-    
-    if (!['lost', 'found'].includes(type)) {
-      return sendError(res, 'نوع المنشور لازم يكون مفقود أو موجود', 400);
+    if (typeof decoded.rankScore !== 'number' || !decoded.id) {
+      return null;
     }
 
-    const post = await feedService.getPostById(id, type, req.user?._id);
-    return sendSuccess(res, post);
-  }),
-
-  // عمل لايك أو إزالته وتحديث السوكت 
-  toggleLike: asyncHandler(async (req, res) => {
-    const { type, id } = req.params;
-    
-    if (!['lost', 'found'].includes(type)) {
-      return sendError(res, 'النوع غير معروف', 400);
-    }
-    const result = await feedService.toggleLike(id, type, req.user._id);
-
-    // تحديث السوكت باللايك الجديد والعدد المحدث
-    if (result) {
-      emitNewLike(id, type, result.likesCount, req.user._id.toString());
-      emitUpdatePost(id, type, { likesCount: result.likesCount });
-    }
-
-    return sendSuccess(res, result);
-  }),
-
-  // إضافة تعليق وتحديث السوكت بالكومنت والعدد
-  addComment: asyncHandler(async (req, res) => {
-    const { type, id } = req.params;
-    const { text } = req.body;
-
-    if (!['lost', 'found'].includes(type) || !text?.trim()) {
-      return sendError(res, 'البيانات ناقصة أو نوع البوست غلط', 400);
-    }
-    const result = await feedService.addComment(id, type, req.user._id, text);
-
-    // تبلغ السوكت عشان يظهر الكومنت عند الكل بدون ريفريش
-    if (result) {
-      emitNewComment(id, type, result.comment, result.commentsCount);
-      emitUpdatePost(id, type, { commentsCount: result.commentsCount });
-    }
-
-    return sendSuccess(res, result, 201);
-  }),
-
-  recomputeScores: asyncHandler(async (req, res) => {
-    const result = await feedService.recomputeAllRankScores();
-    return sendSuccess(res, result);
-  }),
+    return decoded;
+  } catch {
+    return null;
+  }
 };
 
-<<<<<<< Updated upstream
 // نبني filter حسب الفلاتر المطلوبة
 const buildFilter = ({ type, city, category, cursor }) => {
-
   const filter = { status: 'approved', isResolved: false };
 
   if (type && type !== 'all') filter.type = type;
-
   if (city && city !== 'all') filter.city = city;
-
   if (category && category !== 'all') filter.category = category;
 
   // cursor pagination
   if (cursor) {
-
     const decoded = decodeCursor(cursor);
 
     if (decoded) {
@@ -119,15 +52,33 @@ const POPULATE = [
 ];
 
 // نجيب الحقول المهمة فقط عشان الاداء
-const PROJECTION = { type: 1, title: 1, description: 1, images: 1, city: 1, area: 1, location: 1, status: 1, isResolved: 1, itemDate: 1, reward: 1, likesCount: 1, commentsCount: 1, viewsCount: 1, rankScore: 1, createdAt: 1, lastActivityAt: 1, user: 1, category: 1 };
+const PROJECTION = {
+  type: 1,
+  title: 1,
+  description: 1,
+  images: 1,
+  city: 1,
+  area: 1,
+  location: 1,
+  status: 1,
+  isResolved: 1,
+  itemDate: 1,
+  reward: 1,
+  likesCount: 1,
+  commentsCount: 1,
+  viewsCount: 1,
+  rankScore: 1,
+  createdAt: 1,
+  lastActivityAt: 1,
+  user: 1,
+  category: 1,
+};
 
 const feedService = {
-
   // جلب الفيد
   async getFeed({ type = 'all', city, category, cursor, limit: rawLimit }) {
-
     // نحدد limit مع حماية من القيم الكبيرة
-    const limit = Math.min(parseInt(rawLimit) || FEED_LIMIT_DEFAULT, FEED_LIMIT_MAX);
+    const limit = Math.min(parseInt(rawLimit, 10) || FEED_LIMIT_DEFAULT, FEED_LIMIT_MAX);
 
     // key خاص بالكاش حسب الفلاتر
     const cacheKey = `feed:${type}:${city || 'all'}:${category || 'all'}:${cursor || 'start'}`;
@@ -155,7 +106,6 @@ const feedService = {
 
     // اذا البوستات قليلة نجيب بيانات خارجية
     if (posts.length < Math.ceil(limit * 0.5)) {
-
       const needed = limit - posts.length;
 
       const fallback = await getFallbackPosts({
@@ -181,7 +131,6 @@ const feedService = {
 
     // نبني cursor للصفحة الجاية
     if (finalPosts.length === limit) {
-
       const last = finalPosts[finalPosts.length - 1];
 
       // البوستات الخارجية ما بنعملها cursor
@@ -208,7 +157,6 @@ const feedService = {
 
   // like / unlike
   async toggleLike(postId, postType, userId) {
-
     const post = await Post.findOne({ _id: postId, type: postType });
 
     if (!post) {
@@ -224,12 +172,9 @@ const feedService = {
     );
 
     if (alreadyLiked) {
-
       // unlike
       post.likes.pull(userId);
-
     } else {
-
       // like
       post.likes.addToSet(userId);
     }
@@ -248,7 +193,6 @@ const feedService = {
 
   // اضافة كومنت
   async addComment(postId, postType, userId, text) {
-
     if (!text?.trim()) {
       throw {
         status: 400,
@@ -286,7 +230,6 @@ const feedService = {
 
   // جلب بوست واحد
   async getPostById(postId, postType, userId) {
-
     const post = await Post.findOneAndUpdate(
       { _id: postId, type: postType },
       { $inc: { viewsCount: 1 } },
@@ -320,7 +263,6 @@ const feedService = {
 
   // cron job لتحديث rank score يوميا
   async recomputeAllRankScores() {
-
     const posts = await Post.find({
       status: 'approved',
       isResolved: false,
@@ -355,6 +297,3 @@ const feedService = {
 };
 
 module.exports = feedService;
-=======
-module.exports = feedController;
->>>>>>> Stashed changes
