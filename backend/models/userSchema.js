@@ -14,14 +14,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
       unique: true,
       lowercase: true,
-      trim: true,
     },
     password: {
       type: String,
-      required: true,
-      minlength: 6,
+      default: null,
+      validate: {
+        validator: (value) => value === null || value.length >= 6,
+        message: "Password must be at least 6 characters",
+      },
     },
     googleId: {
+      type: String,
+      default: null,
+    },
+    avatar: {
       type: String,
       default: null,
     },
