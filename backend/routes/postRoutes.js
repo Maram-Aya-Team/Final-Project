@@ -14,8 +14,7 @@ const {
 const feedController = require('../controllers/feedController');
 
 // الميديا وير
-const authMiddleware = require("../middlewares/authMiddleware");
-const { requireAdmin, optionalAuth } = require('../middleware/authMiddleware'); 
+const { authMiddleware, requireAdmin, optionalAuth } = require("../middlewares/authMiddleware");
 
 // مسموح للكل يشوف الفييد، والـ optionalAuth عشان نعرف لو الزائر مسجل دخول أو لا
 router.get('/feed', optionalAuth, feedController.getFeed);

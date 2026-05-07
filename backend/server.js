@@ -9,7 +9,7 @@ const cors = require('cors');
 const passport = require("./config/google");
 const authRoutes = require("./routes/authRoutes");
 const postsRoutes = require("./routes/postRoutes"); 
-const { initSocket } = require('./sockets/socket');
+const { initSocket } = require('./sockets/feedHandler');
 
 const app = express();
 const server = http.createServer(app); // تحويل Express لـ HTTP Server
