@@ -24,18 +24,8 @@ export default function OTPPage() {
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
-  useEffect(() => {
-    if (!email) {
-      router.replace('/login');
-    }
-  }, [email, router]);
-
-  //تايمر
-  const startTimer = useCallback(() => {
+  const runCountdown = useCallback(() => {
     clearInterval(timerRef.current);
-    setTimerSeconds(60);
-    setCanResend(false);
-
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
         if (prev <= 1) {
@@ -49,23 +39,26 @@ export default function OTPPage() {
   }, []);
 
   useEffect(() => {
+    if (!email) {
+      router.replace('/login');
+    }
+  }, [email, router]);
+
+  //تايمر
+  const startTimer = useCallback(() => {
+    setTimerSeconds(60);
+    setCanResend(false);
+    runCountdown();
+  }, [runCountdown]);
+
+  useEffect(() => {
     if (!email) return undefined;
 
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    runCountdown();
     setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
     return () => clearInterval(timerRef.current);
-  }, [email]);
+  }, [email, runCountdown]);
 
   // تغيير OTP
   const handleOtpChange = (index, value) => {
