@@ -53,6 +53,4 @@ if (isGoogleOAuthConfigured) {
     console.warn('[Google OAuth] missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_CALLBACK_URL, Google login is disabled.');
 }
 
-passport.isGoogleOAuthConfigured = isGoogleOAuthConfigured;
-
 module.exports = passport;

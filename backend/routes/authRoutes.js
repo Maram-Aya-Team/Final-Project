@@ -4,7 +4,7 @@ const passport = require('passport');
 const authController = require('../controllers/authController');
 
 const requireGoogleOAuth = (req, res, next) => {
-  if (!passport.isGoogleOAuthConfigured) {
+  if (!passport._strategy('google')) {
     return res.status(503).json({
       success: false,
       message: 'Google OAuth is not configured on server',
