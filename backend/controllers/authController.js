@@ -1,7 +1,7 @@
 const User=require("../models/userSchema");
 const bcrypt=require("bcrypt");
 const generateToken=require("../utils/generateToken");
-const authService = require("../services/auth.service");
+const authService = require("../services/authService");
 // استرجاع IP من الريكويست
 const getIP = (req) =>
   req.ip ||

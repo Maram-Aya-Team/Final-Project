@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require("../models/userSchema");
 const EmailOTP = require("../models/email-otp.schema");
 const RefreshToken = require("../models/refresh-token.schema");
-const emailService = require('./email.service');
+const emailService = require('./emailService');
 
 const sha256 = (text) =>
   crypto.createHash('sha256').update(text).digest('hex');
