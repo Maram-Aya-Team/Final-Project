@@ -3,8 +3,14 @@ const router = express.Router();
 const passport = require('passport');
 const authController = require('../controllers/authController');
 
+const isGoogleOAuthConfigured = Boolean(
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CALLBACK_URL
+);
+
 const requireGoogleOAuth = (req, res, next) => {
-  if (!passport._strategy('google')) {
+  if (!isGoogleOAuthConfigured) {
     return res.status(503).json({
       success: false,
       message: 'Google OAuth is not configured on server',
