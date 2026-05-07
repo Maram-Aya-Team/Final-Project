@@ -162,7 +162,7 @@ const feedService = {
     }
 
     // هل المستخدم عامل لايك؟
-    const alreadyLiked = post.likes.some(id => id.toString() === userId.toString());
+    const alreadyLiked = post.likes.some(id => id.equals(userId));
 
     if (alreadyLiked) {
 
