@@ -35,7 +35,7 @@ const UserSchema = new Schema(
 );
 
 UserSchema.index({ email: 1 }, { unique: true });
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const EmailOTPSchema = new Schema(
   {
     email: { type: String, required: true, lowercase: true, trim: true },
@@ -62,7 +62,7 @@ const EmailOTPSchema = new Schema(
 
 EmailOTPSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 EmailOTPSchema.index({ email: 1, purpose: 1, isUsed: 1 });
-const EmailOTP = mongoose.model('EmailOTP', EmailOTPSchema);
+const EmailOTP = mongoose.models.EmailOTP || mongoose.model('EmailOTP', EmailOTPSchema);
 const RefreshTokenSchema = new Schema(
   {
     user:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -90,6 +90,6 @@ const RefreshTokenSchema = new Schema(
 RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 RefreshTokenSchema.index({ user: 1, isActive: 1 });
 RefreshTokenSchema.index({ tokenHash: 1 }, { unique: true });
-const RefreshToken = mongoose.model('RefreshToken', RefreshTokenSchema);
+const RefreshToken = mongoose.models.RefreshToken || mongoose.model('RefreshToken', RefreshTokenSchema);
 
 module.exports = { User, EmailOTP, RefreshToken };

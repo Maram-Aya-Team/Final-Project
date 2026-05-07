@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const crypto = require('crypto');
 
 const EmailOTPSchema = new Schema({
   email: {
