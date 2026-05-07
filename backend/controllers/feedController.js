@@ -24,12 +24,12 @@ const feedController = {
     });
   }),
 
-  // جلب تفاصيل بوست واحد
+  //   بوست واحد
   getPost: asyncHandler(async (req, res) => {
     const { type, id } = req.params;
     
     if (!['lost', 'found'].includes(type)) {
-      return sendError(res, 'نوع المنشور لازم يكون مفقود أو موجود', 400);
+      return sendError(res, 'يجب أن يكون نوع المنشور إما "مفقود" أو "موجود"', 400);
     }
 
     const post = await feedService.getPostById(id, type, req.user?._id);
@@ -41,7 +41,7 @@ const feedController = {
     const { type, id } = req.params;
     
     if (!['lost', 'found'].includes(type)) {
-      return sendError(res, 'النوع غير معروف', 400);
+      return sendError(res, 'نوع المنشور غير مدعوم', 400);
     }
     const result = await feedService.toggleLike(id, type, req.user._id);
 
@@ -60,7 +60,7 @@ const feedController = {
     const { text } = req.body;
 
     if (!['lost', 'found'].includes(type) || !text?.trim()) {
-      return sendError(res, 'البيانات ناقصة أو نوع البوست غلط', 400);
+      return sendError(res, 'البيانات المدخلة غير مكتملة أو نوع المنشور غير صحيح', 400);
     }
     const result = await feedService.addComment(id, type, req.user._id, text);
 

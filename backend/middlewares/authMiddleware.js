@@ -7,7 +7,6 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'لا يوجد توكن، الوصول مرفوض' });
     }
     const decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
-    
     // دعم النوعين (id و sub) عشان التوافق
     const userId = decoded.sub || decoded.id; 
     const user = await User.findById(userId).select('-password');
@@ -22,7 +21,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-/* optionalAuth  بيعرف مين المستخدم لو موجود، ولو مش موجود بيدخله  */
+/* optionalAuth  بعرف مين المستخدم لو موجود، ولو مش موجود بيدخله  */
 const optionalAuth = async (req, res, next) => {
   try {
     const header = req.headers.authorization;

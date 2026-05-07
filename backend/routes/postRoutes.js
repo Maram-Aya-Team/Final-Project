@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-// الكنترولرز القديمة والجديدة
 const {
   createPost,
   getAllPosts,
@@ -15,20 +14,16 @@ const feedController = require('../controllers/feedController');
 
 // الميديا وير
 const { authMiddleware, requireAdmin, optionalAuth } = require("../middlewares/authMiddleware");
-
-// مسموح للكل يشوف الفييد، والـ optionalAuth عشان نعرف لو الزائر مسجل دخول أو لا
+// مسموح للكل يشوف الفيد والـ optionalAuth عشان نعرف لو الزائر مسجل دخول أو لا
 router.get('/feed', optionalAuth, feedController.getFeed);
-
-// راوتس التحكم بالبوستات
+//  التحكم بالبوستات
 router.get("/", getAllPosts);
 router.get("/user/my-posts", authMiddleware, getMyPosts);
 router.get("/:id", getPostById); 
-
 // التفاعلات عالبوستات
 router.post('/:type/:id/like', authMiddleware, feedController.toggleLike);
 router.post('/:type/:id/comment', authMiddleware, feedController.addComment);
-
-//عمليات الإضافة والتعديل 
+// الإضافة والتعديل 
 router.post("/", authMiddleware, createPost);
 router.patch("/:id", authMiddleware, updatePost);
 router.delete("/:id", authMiddleware, deletePost);

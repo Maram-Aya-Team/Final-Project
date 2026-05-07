@@ -6,8 +6,6 @@ class InMemoryCache {
     // تنظيف البيانات المنتهية كل دقيقة
     setInterval(() => this._cleanup(), 60_000);
   }
-
-
   // حفظ البيانات مع وقت انتهاء
   set(key, value, ttlSeconds = 60) {
     this.store.set(key, {
@@ -15,9 +13,7 @@ class InMemoryCache {
       expiresAt: Date.now() + ttlSeconds * 1000,
     });
   }
-
-
-  // جلب البيانات إذا ما انتهت صلاحيتها
+  // فيىتش البيانات إذا ما انتهت صلاحيتها
   get(key) {
 
     const entry = this.store.get(key);
@@ -43,15 +39,12 @@ class InMemoryCache {
       }
     }
   }
-
-
   // إرجاع جميع المفاتيح حسب prefix
   keys(prefix = "") {
     return [...this.store.keys()].filter(key =>
       key.startsWith(prefix)
     );
   }
-
 
   // حذف البيانات المنتهية
   _cleanup() {

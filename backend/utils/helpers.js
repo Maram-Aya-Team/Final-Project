@@ -4,8 +4,6 @@ const asyncHandler = (fn) => (req, res, next) =>
   Promise
     .resolve(fn(req, res, next))
     .catch(next);
-
-
 // ارسال response ناجح بشكل موحد
 const sendSuccess = (res, data, statusCode = 200, meta = {}) =>
 
@@ -14,8 +12,6 @@ const sendSuccess = (res, data, statusCode = 200, meta = {}) =>
     data,
     ...meta,
   });
-
-
 // ارسال error response بشكل موحد
 const sendError = (res, message, statusCode = 400) =>
 
@@ -23,8 +19,6 @@ const sendError = (res, message, statusCode = 400) =>
     success: false,
     message,
   });
-
-
 module.exports = {
   asyncHandler,
   sendSuccess,
