@@ -1,6 +1,5 @@
 class InMemoryCache {
   constructor() {
-
     // تخزين البيانات داخل الذاكرة
     this.store = new Map();
     // تنظيف البيانات المنتهية كل دقيقة
