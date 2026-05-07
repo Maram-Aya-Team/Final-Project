@@ -162,26 +162,20 @@ const feedService = {
     }
 
     // هل المستخدم عامل لايك؟
-    const alreadyLiked = post.likes.some(id => id.equals(userId));
+    const alreadyLiked = post.likes.some(id =>
+      id?.equals ? id.equals(userId) : id.toString() === userId.toString()
+    );
 
     if (alreadyLiked) {
 
       // unlike
       post.likes.pull(userId);
 
-      post.likesCount = Math.max(0, post.likesCount - 1);
-
     } else {
 
       // like
       post.likes.addToSet(userId);
-
-      post.likesCount += 1;
     }
-
-    // تحديث ترتيب البوست
-    post.rankScore = post.computeRankScore();
-    post.lastActivityAt = new Date();
 
     await post.save();
 
@@ -220,12 +214,6 @@ const feedService = {
     };
 
     post.comments.push(comment);
-
-    post.commentsCount += 1;
-
-    // تحديث ترتيب البوست
-    post.rankScore = post.computeRankScore();
-    post.lastActivityAt = new Date();
 
     await post.save();
 

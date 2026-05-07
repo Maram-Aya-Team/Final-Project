@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const MS_PER_HOUR = 3_600_000;
 
 const postSchema = new mongoose.Schema(
   {
@@ -116,7 +117,7 @@ postSchema.pre("save", function (next) {
 
 postSchema.methods.computeRankScore = function () {
   const createdAtMs = this.createdAt ? new Date(this.createdAt).getTime() : Date.now();
-  const ageHours = Math.max(1, (Date.now() - createdAtMs) / 3_600_000);
+  const ageHours = Math.max(1, (Date.now() - createdAtMs) / MS_PER_HOUR);
   const recency = Math.max(0, 100 - ageHours * 0.5);
   const engagement = (this.likesCount || 0) * 2 + (this.commentsCount || 0);
   const typePriority = this.type === "lost" ? 20 : 0;
