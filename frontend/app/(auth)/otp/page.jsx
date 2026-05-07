@@ -8,12 +8,8 @@ import { FiMail, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 const OTP_LENGTH = 6;
 export default function OTPPage() {
   const router = useRouter();
-  const [email] = useState(
-    () => (typeof window !== 'undefined' ? sessionStorage.getItem('otp_email') || '' : '')
-  );
-  const [purpose] = useState(
-    () => (typeof window !== 'undefined' ? sessionStorage.getItem('otp_purpose') || 'login' : 'login')
-  );
+  const email = typeof window !== 'undefined' ? sessionStorage.getItem('otp_email') || '' : '';
+  const purpose = typeof window !== 'undefined' ? sessionStorage.getItem('otp_purpose') || 'login' : 'login';
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +20,7 @@ export default function OTPPage() {
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
-  const runCountdown = useCallback(() => {
+  const setupCountdownInterval = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
@@ -48,17 +44,17 @@ export default function OTPPage() {
   const startTimer = useCallback(() => {
     setTimerSeconds(60);
     setCanResend(false);
-    runCountdown();
-  }, [runCountdown]);
+    setupCountdownInterval();
+  }, [setupCountdownInterval]);
 
   useEffect(() => {
-    if (!email) return undefined;
+    if (!email) return;
 
-    runCountdown();
+    setupCountdownInterval();
     setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
     return () => clearInterval(timerRef.current);
-  }, [email, runCountdown]);
+  }, [email, setupCountdownInterval]);
 
   // تغيير OTP
   const handleOtpChange = (index, value) => {
