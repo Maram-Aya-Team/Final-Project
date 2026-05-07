@@ -78,7 +78,9 @@ const feedService = {
   // جلب الفيد
   async getFeed({ type = 'all', city, category, cursor, limit: rawLimit }) {
     // نحدد limit مع حماية من القيم الكبيرة
-    const limit = Math.min(parseInt(rawLimit, 10) || FEED_LIMIT_DEFAULT, FEED_LIMIT_MAX);
+    const parsedLimit = Number.parseInt(rawLimit, 10);
+    const normalizedLimit = Number.isNaN(parsedLimit) ? FEED_LIMIT_DEFAULT : parsedLimit;
+    const limit = Math.min(normalizedLimit, FEED_LIMIT_MAX);
 
     // key خاص بالكاش حسب الفلاتر
     const cacheKey = `feed:${type}:${city || 'all'}:${category || 'all'}:${cursor || 'start'}`;
