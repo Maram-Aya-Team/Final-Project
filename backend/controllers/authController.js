@@ -96,11 +96,13 @@ const authController = {
         if (!email) {
           return res.status(400).json({ message: 'Email is required' });
         }
-        const safePurpose = allowedOtpPurposes.has(purpose) ? purpose : 'login';
+        if (!allowedOtpPurposes.has(purpose)) {
+          return res.status(400).json({ message: 'Invalid OTP purpose' });
+        }
 
         await authService.sendOTP(
           email,
-          safePurpose,
+          purpose,
           getIP(req)
         );
 
