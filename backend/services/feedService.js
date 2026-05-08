@@ -1,19 +1,11 @@
-// استدعاء الموديل الموحد للبوستات
 const Post = require('../models/postSchema');
-
 const cache = require('../utils/cache');
-
-// تأكدي أن اسم الملف في المجلد هو externalFallback وليس externalFallback.service
 const { getFallbackPosts } = require('./externalFallback');
-
 const FEED_LIMIT_DEFAULT = 12;
 const FEED_LIMIT_MAX = 30;
-
-// نحول rankScore + id ل cursor
 const encodeCursor = (rankScore, id) =>
   Buffer.from(`${rankScore}:${id}`).toString('base64url');
 
-// نفك ال cursor
 const decodeCursor = (cursor) => {
   try {
     const [rankScore, id] = Buffer.from(cursor, 'base64url').toString().split(':');
@@ -27,23 +19,13 @@ const decodeCursor = (cursor) => {
     return null;
   }
 };
-
-// نبني filter حسب الفلاتر المطلوبة
 const buildFilter = ({ type, city, category, cursor }) => {
-
   const filter = { status: 'approved', isResolved: false };
-
   if (type && type !== 'all') filter.type = type;
-
   if (city && city !== 'all') filter.city = city;
-
   if (category && category !== 'all') filter.category = category;
-
-  // cursor pagination
   if (cursor) {
-
     const decoded = decodeCursor(cursor);
-
     if (decoded) {
       filter.$or = [
         { rankScore: { $lt: decoded.rankScore } },
@@ -54,29 +36,20 @@ const buildFilter = ({ type, city, category, cursor }) => {
 
   return filter;
 };
-
-// populate لل user + category
 const POPULATE = [
   { path: 'user', select: 'name avatar _id' },
   { path: 'category', select: 'name icon' },
 ];
 
-// نجيب الحقول المهمة فقط عشان الاداء
 const PROJECTION = { type: 1, title: 1, description: 1, images: 1, city: 1, area: 1, location: 1, status: 1, isResolved: 1, itemDate: 1, reward: 1, likesCount: 1, commentsCount: 1, viewsCount: 1, rankScore: 1, createdAt: 1, lastActivityAt: 1, user: 1, category: 1 };
 
 const feedService = {
 
-  // جلب الفيد
   async getFeed({ type = 'all', city, category, cursor, limit: rawLimit }) {
-
-    // نحدد limit مع حماية من القيم الكبيرة
     const limit = Math.min(parseInt(rawLimit) || FEED_LIMIT_DEFAULT, FEED_LIMIT_MAX);
-
     // key خاص بالكاش حسب الفلاتر
     const cacheKey = `feed:${type}:${city || 'all'}:${category || 'all'}:${cursor || 'start'}`;
-
     const cached = cache.get(cacheKey);
-
     // اذا موجود بالكاش رجعه مباشرة
     if (cached) {
       return {
@@ -86,7 +59,6 @@ const feedService = {
     }
 
     const filter = buildFilter({ type, city, category, cursor });
-
     const posts = await Post.find(filter, PROJECTION)
       .populate(POPULATE)
       .sort({ rankScore: -1, _id: -1 })
@@ -98,9 +70,7 @@ const feedService = {
 
     // اذا البوستات قليلة نجيب بيانات خارجية
     if (posts.length < Math.ceil(limit * 0.5)) {
-
       const needed = limit - posts.length;
-
       const fallback = await getFallbackPosts({
         type,
         city: city || 'all',
@@ -119,22 +89,15 @@ const feedService = {
 
       usedFallback = true;
     }
-
     let nextCursor = null;
-
-    // نبني cursor للصفحة الجاية
     if (finalPosts.length === limit) {
 
       const last = finalPosts[finalPosts.length - 1];
-
-      // البوستات الخارجية ما بنعملها cursor
       if (!last.isFallback && last._id) {
         nextCursor = encodeCursor(last.rankScore || 0, last._id.toString());
       }
     }
-
     const hasMore = nextCursor !== null || usedFallback;
-
     const result = {
       posts: finalPosts,
       nextCursor,
@@ -142,18 +105,13 @@ const feedService = {
       count: finalPosts.length,
       usedFallback,
     };
-
-    // نخزن بالكاش
     cache.set(cacheKey, result, cursor ? 60 : 30);
 
     return result;
   },
-
   // like / unlike
   async toggleLike(postId, postType, userId) {
-
     const post = await Post.findOne({ _id: postId, type: postType });
-
     if (!post) {
       throw {
         status: 404,
@@ -161,119 +119,81 @@ const feedService = {
       };
     }
 
-    // هل المستخدم عامل لايك؟
     const alreadyLiked = post.likes.some(id =>
       id?.equals ? id.equals(userId) : id.toString() === userId.toString()
     );
 
     if (alreadyLiked) {
-
-      // unlike
       post.likes.pull(userId);
-
     } else {
-
-      // like
       post.likes.addToSet(userId);
-    }
-
-    await post.save();
-
-    // تحديث الكاش
+    } await post.save();
     cache.del('feed:*');
-
     return {
       liked: !alreadyLiked,
       likesCount: post.likesCount,
       rankScore: post.rankScore,
     };
   },
-
-  // اضافة كومنت
   async addComment(postId, postType, userId, text) {
-
     if (!text?.trim()) {
       throw {
         status: 400,
         message: 'Comment text required',
       };
-    }
-
-    const post = await Post.findOne({ _id: postId, type: postType });
-
+    }const post = await Post.findOne({ _id: postId, type: postType });
     if (!post) {
       throw {
         status: 404,
         message: 'Post not found',
       };
     }
-
     const comment = {
       user: userId,
       text: text.trim(),
     };
-
     post.comments.push(comment);
-
     await post.save();
-
     const newComment = post.comments[post.comments.length - 1];
-
     cache.del('feed:*');
-
     return {
       comment: newComment,
       commentsCount: post.commentsCount,
     };
   },
-
-  // جلب بوست واحد
   async getPostById(postId, postType, userId) {
 
     const post = await Post.findOneAndUpdate(
       { _id: postId, type: postType },
       { $inc: { viewsCount: 1 } },
-      { new: true }
-    )
+      { new: true })
       .populate([
         { path: 'user', select: 'name avatar _id' },
         { path: 'category', select: 'name icon' },
-        { path: 'comments.user', select: 'name avatar _id' },
-      ])
+        { path: 'comments.user', select: 'name avatar _id' },])
       .lean();
-
     if (!post) {
       throw {
         status: 404,
         message: 'Post not found',
       };
     }
-
-    // هل المستخدم عامل لايك؟
     const isLiked = userId
-      ? post.likes?.some(id => id.toString() === userId.toString())
-      : false;
-
+      ? post.likes?.some(id => id.toString() === userId.toString()): false;
     return {
       ...post,
       type: postType,
       isLiked,
     };
   },
-
-  // cron job لتحديث rank score يوميا
   async recomputeAllRankScores() {
-
     const posts = await Post.find({
       status: 'approved',
       isResolved: false,
     });
-
-    // تجهيز bulk updates
     const bulk = posts.map(post => ({
       updateOne: {
         filter: { _id: post._id },
-
         update: {
           $set: {
             rankScore: post.computeRankScore(),
@@ -281,15 +201,10 @@ const feedService = {
         },
       },
     }));
-
-    // bulkWrite اسرع من save لكل بوست
     if (bulk.length) {
       await Post.bulkWrite(bulk);
     }
-
-    // تنظيف الكاش بعد التحديث
     cache.del('feed:*');
-
     return {
       lostCount: posts.filter(post => post.type === 'lost').length,
       foundCount: posts.filter(post => post.type === 'found').length,
