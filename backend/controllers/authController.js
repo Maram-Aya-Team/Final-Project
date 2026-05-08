@@ -7,6 +7,13 @@ const getIP = (req) =>
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
   req.socket?.remoteAddress ||
   'unknown';
+const allowedOtpPurposes = new Set([
+  'email_verification',
+  'login',
+  'password_reset',
+  'email_change',
+  'two_factor',
+]);
 
 const authController = {
   async register(req, res, next) {
@@ -89,12 +96,12 @@ const authController = {
         if (!email) {
           return res.status(400).json({ message: 'Email is required' });
         }
+        const safePurpose = allowedOtpPurposes.has(purpose) ? purpose : 'login';
 
         await authService.sendOTP(
           email,
-          purpose,
-          getIP(req),
-          null
+          safePurpose,
+          getIP(req)
         );
 
         return res.status(200).json({
