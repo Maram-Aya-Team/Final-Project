@@ -12,15 +12,21 @@ const authRoutes = require('./routes/authRoutes');
 const postRoutes = require('./routes/postRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const conversationRoutes = require("./routes/conversationRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 const { initNotificationSocket } = require('./sockets/notificationHandler');
+const chatSocket = require("./sockets/chatSocket");
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
+app.use(express.json({ limit: '10mb' }));
+
+
+
 app.use(helmet());
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(cors({
@@ -29,6 +35,10 @@ app.use(cors({
   methods: ['GET','POST','DELETE','PATCH','PUT'],
   allowedHeaders: ['Content-Type','Authorization'],
 }));
+
+app.use("/conversations", conversationRoutes);
+app.use("/messages", messageRoutes);
+
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);
@@ -62,6 +72,7 @@ io.use((socket, next) => {
   }
 });
 initNotificationSocket(io);
+chatSocket(io);
 
 mongoose.connect(process.env.DATABASE_URL)
   .then(() => {
