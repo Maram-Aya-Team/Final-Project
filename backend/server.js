@@ -63,13 +63,13 @@ io.use((socket, next) => {
 });
 initNotificationSocket(io);
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.DATABASE_URL)
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch(err => {
-    console.error('❌ MongoDB failed:', err.message);
+    console.error('MongoDB failed:', err.message);
     process.exit(1);
   });
 
