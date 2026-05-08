@@ -1,7 +1,5 @@
 const Notification = require('../schemas/notificationSchema');
 const cache = require('../utils/cache');
-
-// Cursor Helpers لعملية التصفح السريع
 const encodeCursor = (sortKey, id) => Buffer.from(`${sortKey}:${id}`).toString('base64url');
 const decodeCursor = (cursor) => {
   try {
@@ -18,15 +16,12 @@ const notificationService = {
   async createNotification({ recipient, actor = null, type, title, body, actionUrl, relatedEntity, metadata = {} }) {
     if (!recipient || !type || !title || !body) throw { status: 400, message: 'بيانات الإشعار ناقصة' };
     if (actor && actor.toString() === recipient.toString()) return null;
-
     const notif = await Notification.create({ recipient, actor, type, title, body, actionUrl: actionUrl || null, relatedEntity: relatedEntity || {}, metadata, sortKey: Date.now() });
-    
     cache.del(`unread_count:${recipient}`);
     await notif.populate(POPULATE_ACTOR);
     return notif;
   },
 
-  // جلب قائمة الإشعارات مع Cursor Pagination
   async getNotifications({ userId, type, cursor, limit = 20 }) {
     const safeLimit = Math.min(parseInt(limit) || 20, 50);
     const filter = { recipient: userId };
@@ -44,8 +39,6 @@ const notificationService = {
 
     return { notifications, nextCursor, hasMore: nextCursor !== null, count: notifications.length };
   },
-
-  // حساب عدد الإشعارات غير المقروءة (مع كاش 30 ثانية)
   async getUnreadCount(userId) {
     const cacheKey = `unread_count:${userId}`;
     const cached = cache.get(cacheKey);
@@ -55,30 +48,22 @@ const notificationService = {
     cache.set(cacheKey, count, 30);
     return count;
   },
-
-  // تحويل إشعار واحد إلى مقروء
   async markAsRead(notificationId, userId) {
     const notif = await Notification.findOneAndUpdate({ _id: notificationId, recipient: userId, isRead: false }, { isRead: true, readAt: new Date() }, { new: true }).lean();
     if (notif) cache.del(`unread_count:${userId}`);
     return notif;
   },
-
-  // تحويل كل إشعارات المستخدم لمقروءة
   async markAllAsRead(userId) {
     const result = await Notification.updateMany({ recipient: userId, isRead: false }, { isRead: true, readAt: new Date() });
     cache.del(`unread_count:${userId}`);
     return { modifiedCount: result.modifiedCount };
   },
-
-  // حذف إشعار محدد
   async deleteNotification(notificationId, userId) {
     const deleted = await Notification.findOneAndDelete({ _id: notificationId, recipient: userId });
     if (!deleted) throw { status: 404, message: 'الإشعار غير موجود' };
     cache.del(`unread_count:${userId}`);
     return { deleted: true };
   },
-
-  // تنظيف الإشعارات المقروءة فقط
   async deleteAllRead(userId) {
     const result = await Notification.deleteMany({ recipient: userId, isRead: true });
     return { deletedCount: result.deletedCount };

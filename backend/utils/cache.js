@@ -1,22 +1,14 @@
 class InMemoryCache {
   constructor() {
-    // تخزين البيانات داخل الذاكرة
     this.store = new Map();
-    // تنظيف البيانات المنتهية كل دقيقة
     setInterval(() => this._cleanup(), 60_000);
   }
-
-
-  // حفظ البيانات مع وقت انتهاء
   set(key, value, ttlSeconds = 60) {
     this.store.set(key, {
       value,
       expiresAt: Date.now() + ttlSeconds * 1000,
     });
   }
-
-
-  // جلب البيانات إذا ما انتهت صلاحيتها
   get(key) {
 
     const entry = this.store.get(key);
@@ -27,7 +19,6 @@ class InMemoryCache {
       return null;
     }return entry.value;
   }
-  // حذف cache باستخدام key أو wildcard
   del(pattern) {
 
     if (!pattern.includes("*")) {
@@ -42,17 +33,11 @@ class InMemoryCache {
       }
     }
   }
-
-
-  // إرجاع جميع المفاتيح حسب prefix
   keys(prefix = "") {
     return [...this.store.keys()].filter(key =>
       key.startsWith(prefix)
     );
   }
-
-
-  // حذف البيانات المنتهية
   _cleanup() {
 
     const now = Date.now();
@@ -62,9 +47,6 @@ class InMemoryCache {
       }
     }
   }
-
-
-  // معلومات عن حالة الـ cache
   stats() {
     return {
       size: this.store.size,
@@ -72,7 +54,6 @@ class InMemoryCache {
     };
   }
 }
-// نسخة واحدة مشتركة داخل المشروع
 const cache = new InMemoryCache();
 
 module.exports = cache;

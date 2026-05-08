@@ -13,7 +13,6 @@ function initSocket(httpServer) {
     pingTimeout: 60000,
     pingInterval: 25000,
   });
-
   // ميديا وير للتأكد من هوية المستخدم (لو ضيف مسموح يدخل)
   io.use((socket, next) => {
     try {
@@ -33,9 +32,8 @@ function initSocket(httpServer) {
       next();
     }
   });
-
   io.on('connection', (socket) => {
-    // توزيع المستخدم على غرف حسب الفلتر (مدينة أو نوع المنشور)
+    // توزيع المستخدم على غرف حسب الفلتر 
     socket.on('join_feed', ({ type = 'all', city = null } = {}) => {
       socket.join('feed:all');
       if (type !== 'all') socket.join(`feed:${type}`);
@@ -57,8 +55,6 @@ function initSocket(httpServer) {
 
   return io;
 }
-
-// دالة بتبعت البوست الجديد لكل الغرف المهتمة (حسب المدينة والنوع)
 function emitNewPost(post) {
   if (!io) return;
 
@@ -76,8 +72,6 @@ function emitNewPost(post) {
     });
   });
 }
-
-// تحديثات عامة (لايك، كومنت، تغيير حالة) بتوصل لكل اللي فاتحين الفييد
 function emitUpdatePost(postId, postType, changes) {
   if (!io) return;
   io.to('feed:all').emit('update_post', { postId, postType, changes });

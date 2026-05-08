@@ -1,8 +1,6 @@
 const User = require('../schemas/userSchema');
 const Post = require('../schemas/postSchema'); // استخدام الموديل الموحد
 const cache = require('../utils/cache');
-
-// مساعدة في التحقق من البيانات
 const ALLOWED_CITIES = ['Amman','Irbid','Zarqa','Ajloun','Jerash','Mafraq','Balqa','Madaba','Karak','Tafilah','Maan','Aqaba'];
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
 const URL_REGEX = /^https?:\/\/.+/;
@@ -22,17 +20,13 @@ const validateProfileUpdate = (data) => {
 
 const SAFE_FIELDS = 'name username email phone city bio avatar cover socialLinks privacy stats createdAt';
 const PUBLIC_FIELDS = 'name username bio avatar cover city stats createdAt';
-
 const profileService = {
-
-  // جلب بروفايل المستخدم الحالي (كامل)
   async getMyProfile(userId) {
     const user = await User.findById(userId).select(`${SAFE_FIELDS} notificationPrefs privacy`).lean();
     if (!user) throw { status: 404, message: 'User not found' };
     return user;
   },
 
-  // جلب البروفايل العام (بالـ ID أو الـ username)
   async getPublicProfile(identifier) {
     const query = identifier.match(/^[0-9a-fA-F]{24}$/) ? { _id: identifier } : { username: identifier.toLowerCase() };
     const cacheKey = `profile:${identifier}`;
@@ -45,8 +39,6 @@ const profileService = {
     cache.set(cacheKey, user, 60);
     return user;
   },
-
-  // تحديث بيانات البروفايل وتصفير الكاش
   async updateProfile(userId, data) {
     const errors = validateProfileUpdate(data);
     if (errors.length > 0) throw { status: 422, message: errors.join('; ') };
@@ -68,7 +60,6 @@ const profileService = {
     return user;
   },
 
-  // جلب بوستات المستخدم (Lost & Found) من الموديل الموحد
   async getUserPosts({ userId, type = 'all', cursor, limit = 12 }) {
     const safeLimit = Math.min(parseInt(limit) || 12, 30);
     const filter = { user: userId, status: 'approved' };
@@ -80,8 +71,6 @@ const profileService = {
 
     return { posts, nextCursor, hasMore: nextCursor !== null };
   },
-
-  // جلب البوستات المحفوظة
   async getSavedPosts(userId) {
     const user = await User.findById(userId).populate({
       path: 'savedPosts.postId',
@@ -89,13 +78,11 @@ const profileService = {
     }).lean();
 
     const posts = (user?.savedPosts || [])
-      .filter(s => s.postId) // التأكد أن البوست ما زال موجوداً
+      .filter(s => s.postId) 
       .map(s => s.postId);
 
     return posts;
   },
-
-  // حفظ أو إلغاء حفظ بوست
   async toggleSavePost(userId, postId) {
     const user = await User.findById(userId);
     const idx = user.savedPosts.findIndex(s => s.postId.toString() === postId);
@@ -110,8 +97,6 @@ const profileService = {
       return { saved: true };
     }
   },
-
-  // تحديث إحصائيات المستخدم (تُستدعى عند الحاجة)
   async refreshStats(userId) {
     const statsData = await Post.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(userId) } },
