@@ -9,9 +9,8 @@ const decodeCursor = (cursor) => {
 };
 
 const POPULATE_ACTOR = { path: 'actor', select: 'name avatar _id' };
-
 const notificationService = {
-
+  
   // إنشاء إشعار جديد وتصفير الكاش
   async createNotification({ recipient, actor = null, type, title, body, actionUrl, relatedEntity, metadata = {} }) {
     if (!recipient || !type || !title || !body) throw { status: 400, message: 'بيانات الإشعار ناقصة' };

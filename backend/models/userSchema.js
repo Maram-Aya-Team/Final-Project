@@ -21,8 +21,6 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, trim: true, maxlength: 300, default: '' },
   avatar: { type: String, default: null },
   cover: { type: String, default: null },
-
-  // الروابط الاجتماعية وإعدادات الخصوصية
   socialLinks: {
     instagram: { type: String, default: '' },
     twitter: { type: String, default: '' },
@@ -34,8 +32,6 @@ const userSchema = new mongoose.Schema({
     showEmail: { type: Boolean, default: false },
     showActivity: { type: Boolean, default: true }
   },
-
-  // تفضيلات الإشعارات
   notificationPrefs: {
     email: { type: Boolean, default: true },
     push: { type: Boolean, default: true },
@@ -43,16 +39,12 @@ const userSchema = new mongoose.Schema({
     messages: { type: Boolean, default: true },
     system: { type: Boolean, default: true }
   },
-
-  // إحصائيات المستخدم (تُحدث تلقائياً مع البوستات)
   stats: {
     totalPosts: { type: Number, default: 0 },
     lostPosts: { type: Number, default: 0 },
     foundPosts: { type: Number, default: 0 },
     resolvedPosts: { type: Number, default: 0 }
   },
-
-  // بيانات الأمان والدخول
   googleId: { type: String, default: null, sparse: true },
   isEmailVerified: { type: Boolean, default: false },
   isBanned: { type: Boolean, default: false },
@@ -63,15 +55,12 @@ const userSchema = new mongoose.Schema({
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date, default: null },
 
-  // البوستات المحفوظة
   savedPosts: [{
-    postType: { type: String, enum: ['lost', 'found'] }, // تم تعديلها لتوافق الموديل الموحد
+    postType: { type: String, enum: ['lost', 'found'] },
     postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
     savedAt: { type: Date, default: Date.now }
   }]
 }, { timestamps: true, versionKey: false });
-
-// الفهارس (Indexes) لسرعة البحث
 userSchema.index({ email: 1 });
 userSchema.index({ username: 1 }, { sparse: true });
 
