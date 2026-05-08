@@ -2,6 +2,7 @@ const User=require("../models/userSchema");
 const bcrypt=require("bcrypt");
 const generateToken=require("../utils/generateToken");
 const authService = require("../services/authService");
+const { ALLOWED_OTP_PURPOSES } = require('../config/otpPurposes');
 const getIP = (req) =>
   req.ip ||
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -83,7 +84,27 @@ const authController = {
   
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
+      const { email, password, resendOTP, purpose = 'login' } = req.body;
+
+      if (resendOTP) {
+        if (!email) {
+          return res.status(400).json({ message: 'Email is required' });
+        }
+        if (!ALLOWED_OTP_PURPOSES.has(purpose)) {
+          return res.status(400).json({ message: 'Invalid OTP purpose' });
+        }
+
+        await authService.sendOTP(
+          email,
+          purpose,
+          getIP(req)
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'OTP sent successfully',
+        });
+      }
 
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
