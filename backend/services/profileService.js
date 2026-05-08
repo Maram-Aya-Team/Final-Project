@@ -1,5 +1,5 @@
-const User = require('../schemas/userSchema');
-const Post = require('../schemas/postSchema'); // استخدام الموديل الموحد
+const User = require('../models/userSchema');
+const Post = require('../models/postSchema'); // استخدام الموديل الموحد
 const cache = require('../utils/cache');
 const ALLOWED_CITIES = ['Amman','Irbid','Zarqa','Ajloun','Jerash','Mafraq','Balqa','Madaba','Karak','Tafilah','Maan','Aqaba'];
 const USERNAME_REGEX = /^[a-z0-9_]{3,30}$/;
