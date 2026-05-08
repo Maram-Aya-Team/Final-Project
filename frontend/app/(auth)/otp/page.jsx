@@ -31,12 +31,8 @@ export default function OTPPage() {
     }
   }, [email, router]);
 
-  // مؤقت إعادة الإرسال
-  const startTimer = useCallback(() => {
+  const runCountdown = useCallback(() => {
     clearInterval(timerRef.current);
-    setTimerSeconds(RESEND_COOLDOWN_SECONDS);
-    setCanResend(false);
-
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
         if (prev <= 1) {
@@ -48,20 +44,16 @@ export default function OTPPage() {
       });
     }, 1000);
   }, []);
+  // مؤقت إعادة الإرسال
+  const startTimer = useCallback(() => {
+    setTimerSeconds(RESEND_COOLDOWN_SECONDS);
+    setCanResend(false);
+    runCountdown();
+  }, [runCountdown]);
 
   useEffect(() => {
     if (email) {
-      clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setTimerSeconds((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            setCanResend(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      runCountdown();
       const focusTimeout = setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
       return () => {
@@ -69,7 +61,7 @@ export default function OTPPage() {
         clearTimeout(focusTimeout);
       };
     }
-  }, [email, startTimer]);
+  }, [email, runCountdown]);
 
   // تغيير OTP
   const handleOtpChange = (index, value) => {
