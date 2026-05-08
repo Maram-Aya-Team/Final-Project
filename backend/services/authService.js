@@ -5,6 +5,7 @@ const User = require("../models/userSchema");
 const EmailOTP = require("../models/email-otp.schema");
 const RefreshToken = require("../models/refresh-token.schema");
 const emailService = require('./emailService');
+const { ALLOWED_OTP_PURPOSES } = require('../config/otpPurposes');
 
 const sha256 = (text) =>
   crypto.createHash('sha256').update(text).digest('hex');
@@ -12,14 +13,6 @@ const generateOTP = () =>
   crypto.randomInt(100000, 1000000).toString();
 const generateRefreshToken = () =>
   crypto.randomBytes(40).toString('hex');
-const ALLOWED_OTP_PURPOSES = new Set([
-  'email_verification',
-  'login',
-  'password_reset',
-  'email_change',
-  'two_factor',
-]);
-
 const authService = {
   async login(email, password, ip, userAgent) {
     const normalizedEmail = email.toLowerCase().trim();
