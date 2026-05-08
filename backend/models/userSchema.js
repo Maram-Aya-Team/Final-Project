@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   // المعلومات الأساسية للحساب
   name: { type: String, required: true, trim: true, maxlength: 100 },
-  email: { type: String, required: true, trim: true, unique: true, lowercase: true },
+  email: { type: String, required: true, trim: true, unique: true, lowercase: true, trim: true },
   password: { 
     type: String, 
     default: null, 
@@ -61,7 +61,6 @@ const userSchema = new mongoose.Schema({
     savedAt: { type: Date, default: Date.now }
   }]
 }, { timestamps: true, versionKey: false });
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 }, { sparse: true });
+
 
 module.exports = mongoose.model('User', userSchema);
