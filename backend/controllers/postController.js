@@ -22,7 +22,16 @@ const createPost = async (req, res) => {
 
 const getAllPosts = async (req, res) => {
   try {
-    const { type, city, category, keyword, status, page = 1, limit = 10 } = req.query;
+    const {
+      type,
+      city,
+      category,
+      keyword,
+      status,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
     const filter = {};
 
     if (type) filter.type = type;
@@ -34,26 +43,36 @@ const getAllPosts = async (req, res) => {
       filter.$or = [
         { title: { $regex: keyword, $options: "i" } },
         { description: { $regex: keyword, $options: "i" } },
-        { area: { $regex: keyword, $options: "i" } }
+        { area: { $regex: keyword, $options: "i" } },
+        { city: { $regex: keyword, $options: "i" } },
       ];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
     const posts = await Post.find(filter)
       .populate("user", "name email phone")
       .populate("category", "name icon")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit));
+      .limit(limitNumber);
 
     const totalPosts = await Post.countDocuments(filter);
 
     return res.status(200).json({
-      success: true, totalPosts, currentPage: Number(page), 
-      totalPages: Math.ceil(totalPosts / Number(limit)), posts 
+      success: true,
+      totalPosts,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalPosts / limitNumber),
+      posts,
     });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
