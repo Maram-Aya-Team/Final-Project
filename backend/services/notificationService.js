@@ -1,4 +1,4 @@
-const Notification = require('../schemas/notificationSchema');
+const Notification = require('../models/notificationSchema');
 const cache = require('../utils/cache');
 const encodeCursor = (sortKey, id) => Buffer.from(`${sortKey}:${id}`).toString('base64url');
 const decodeCursor = (cursor) => {

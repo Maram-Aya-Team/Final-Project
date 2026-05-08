@@ -11,7 +11,7 @@ const {
 } = require("../controllers/postController");
 const feedController = require('../controllers/feedController');
 // الميديا وير
-const { authMiddleware, requireAdmin, optionalAuth } = require("../middlewares/authMiddleware");
+const { protect: authMiddleware, requireAdmin, optionalAuth } = require("../middlewares/authMiddleware");
 
 // عشان نعرف لو الزائر مسجل دخول أو لا
 router.get('/feed', optionalAuth, feedController.getFeed);
