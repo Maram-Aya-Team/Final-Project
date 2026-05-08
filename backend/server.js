@@ -14,6 +14,9 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const adminDashboardRoutes=require("./routes/adminDashboardRoutes");
+const adminReportRoutes = require("./routes/adminReportRoutes");
+const adminFraudRoutes = require("./routes/adminFraudRoutes");
 const { initNotificationSocket } = require('./sockets/notificationHandler');
 const chatSocket = require("./sockets/chatSocket");
 
@@ -38,7 +41,9 @@ app.use(cors({
 
 app.use("/conversations", conversationRoutes);
 app.use("/messages", messageRoutes);
-
+app.use("/admin/dashboard", adminDashboardRoutes);
+app.use("/admin/reports", adminReportRoutes);
+app.use("/admin/fraud", adminFraudRoutes);
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);

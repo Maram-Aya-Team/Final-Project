@@ -18,7 +18,7 @@ const chatSocket = (io) => {
     socket.on("joinConversation", (conversationId) => {
       socket.join(conversationId);
 
-      console.log(`📩 Joined room: ${conversationId}`);
+      console.log(`Joined room: ${conversationId}`);
     });
 
     // إرسال رسالة realtime
