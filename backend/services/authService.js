@@ -5,18 +5,15 @@ const User = require("../models/userSchema");
 const EmailOTP = require("../models/email-otp.schema");
 const RefreshToken = require("../models/refresh-token.schema");
 const emailService = require('./emailService');
+const { ALLOWED_OTP_PURPOSES } = require('../config/otpPurposes');
 
 const sha256 = (text) =>
   crypto.createHash('sha256').update(text).digest('hex');
- 
 const generateOTP = () =>
   crypto.randomInt(100000, 1000000).toString();
-
 const generateRefreshToken = () =>
   crypto.randomBytes(40).toString('hex');
-
 const authService = {
-
   async login(email, password, ip, userAgent) {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
@@ -24,11 +21,10 @@ const authService = {
     if (!user)      throw { status: 401, message: 'Invalid email or password' };
     if (user.isBanned) throw { status: 403, message: 'User is banned' };
     if (!user.password) throw { status: 400, message: 'Use Google login instead' };
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw { status: 401, message: 'Invalid email or password' };
 
-    // إذا الإيميل مش مفعل، ابعت OTP
+    // إذا الإيميل مش اكتف ابعت OTP
     if (!user.isEmailVerified) {
       await authService.sendOTP(normalizedEmail, 'email_verification', ip, user._id);
       return { status: 'otp_required', email: normalizedEmail, reason: 'email_not_verified' };
@@ -46,11 +42,13 @@ const authService = {
   },
 
   async sendOTP(email, purpose, ip, userId = null) {
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
+    const safePurpose = ALLOWED_OTP_PURPOSES.has(purpose) ? purpose : null;
+    if (!safePurpose) throw { status: 400, message: 'Invalid OTP purpose' };
 
     // نلغي أي OTP قديم لنفس الغرض
     await EmailOTP.updateMany(
-      { email: normalizedEmail, purpose, isUsed: false },
+      { email: normalizedEmail, purpose: safePurpose, isUsed: false },
       { isUsed: true, usedAt: new Date() }
     );
 
@@ -61,21 +59,23 @@ const authService = {
       email: normalizedEmail,
       user: userId,
       otpHash,
-      purpose,
+      purpose: safePurpose,
       requestedFromIp: ip || 'unknown',
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await emailService.sendOTP(email, otp, purpose);
+    await emailService.sendOTP(normalizedEmail, otp, safePurpose);
     return { sent: true };
   },
 
   async verifyOTP(email, otp, purpose, ip, userAgent) {
     const normalizedEmail = email.toLowerCase().trim();
+    const safePurpose = ALLOWED_OTP_PURPOSES.has(purpose) ? purpose : null;
+    if (!safePurpose) throw { status: 400, message: 'Invalid OTP purpose' };
 
     const otpRecord = await EmailOTP.findOne({
       email: normalizedEmail,
-      purpose,
+      purpose: safePurpose,
       isUsed: false,
       expiresAt: { $gt: new Date() },
     });
@@ -93,7 +93,7 @@ const authService = {
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) throw { status: 404, message: 'User not found' };
 
-    if (purpose === 'email_verification') {
+    if (safePurpose === 'email_verification') {
       user.isEmailVerified = true;
     }
 

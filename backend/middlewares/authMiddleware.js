@@ -1,49 +1,42 @@
 const jwt = require('jsonwebtoken');
-const User = require("../models/userSchema");
-const authMiddleware = async (req, res, next) => {
+const User = require('../models/userSchema');
+const protect = async (req, res, next) => {
   try {
-    const header = req.headers.authorization;
-    if (!header?.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, message: 'لا يوجد توكن، الوصول مرفوض' });
-    }
-    const decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
-    
-    // دعم النوعين (id و sub) عشان التوافق
-    const userId = decoded.sub || decoded.id; 
-    const user = await User.findById(userId).select('-password');
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false, message: 'No token provided' });
 
-    if (!user) return res.status(401).json({ success: false, message: 'المستخدم غير موجود' });
-    if (user.isBanned) return res.status(403).json({ success: false, message: 'الحساب محظور' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.sub || decoded.id).select('-password');
+
+    if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (user.isBanned) return res.status(403).json({ success: false, message: 'Account banned' });
 
     req.user = user;
     next();
-  } catch (error) {
-    return res.status(401).json({ success: false, message: 'توكن غير صالح' });
+  } catch {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 
-/* optionalAuth  بيعرف مين المستخدم لو موجود، ولو مش موجود بيدخله  */
+/**مستخدم مسجل او زائر*/
 const optionalAuth = async (req, res, next) => {
   try {
-    const header = req.headers.authorization;
-    if (header?.startsWith('Bearer ')) {
-      const decoded = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
-      const userId = decoded.sub || decoded.id;
-      const user = await User.findById(userId).select('-password');
-      
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.sub || decoded.id).select('-password');
       if (user && !user.isBanned) req.user = user;
     }
-  } catch (error) {
-    // لو التوكن خربان بنكمل كأنه ضيف بدون ما نعطل البرنامج
-  }
+  } catch { /* ضيف  */ }
   next();
 };
+
+/** صلاحيات الأدمن  */
 const requireAdmin = (req, res, next) => {
-  const roles = ['admin', 'moderator'];
-  if (!req.user || !roles.includes(req.user.role)) {
-    return res.status(403).json({ success: false, message: 'هذا الإجراء مسموح للأدمن فقط' });
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
   }
   next();
 };
 
-module.exports = { authMiddleware, optionalAuth, requireAdmin };
+module.exports = { protect, optionalAuth, requireAdmin };

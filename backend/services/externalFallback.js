@@ -13,7 +13,6 @@ const CATEGORIES = [
 // يبني رابط صورة حسب التصنيف
 const unsplashUrl = (keyword, w = 400, h = 300) =>
   `https://source.unsplash.com/${w}x${h}/?${keyword},lost,found`;
-
 async function getFallbackPosts({ type = 'all', city = 'all', page = 1, limit = 12 } = {}) {
 
   // نجيب البيانات الخارجية مع بعض
@@ -21,8 +20,6 @@ async function getFallbackPosts({ type = 'all', city = 'all', page = 1, limit = 
     fetch('https://jsonplaceholder.typicode.com/posts').then(res => res.json()),
     fetch('https://jsonplaceholder.typicode.com/users').then(res => res.json()),
   ]);
-
-  // نحولهم لشكل بوستات التطبيق
   const allPosts = rawPosts.map((post, i) => {
 
     const itemType = i % 3 === 0 ? 'found' : 'lost';
@@ -40,8 +37,7 @@ async function getFallbackPosts({ type = 'all', city = 'all', page = 1, limit = 
     const comments = Math.floor(Math.random() * 15);
     const hasReward =
       itemType === 'lost' && i % 5 === 0;
-
-    // نفس معادلة ترتيب الباك
+    // معادلة ترتيب الباك
     const ageHours = (Date.now() - date) / 3_600_000;
     const recency = Math.max(0, 100 - ageHours * 0.5);
     const engage = (likes * 2) + comments;
@@ -83,7 +79,6 @@ async function getFallbackPosts({ type = 'all', city = 'all', page = 1, limit = 
       rankScore,
       lastActivityAt: date.toISOString(),
       createdAt: date.toISOString(),
-
       // بوست جاي من API خارجي
       isFallback: true,
     };
@@ -91,20 +86,13 @@ async function getFallbackPosts({ type = 'all', city = 'all', page = 1, limit = 
 
   let filtered = allPosts;
 
-  // فلترة حسب النوع
   if (type !== 'all') {
     filtered = filtered.filter(post => post.type === type);
   }
-
-  // فلترة حسب المدينة
   if (city !== 'all') {
     filtered = filtered.filter(post => post.city === city);
   }
-
-  // ترتيب حسب الrank score
   filtered.sort((a, b) => b.rankScore - a.rankScore);
-
-  // pagination
   const start = (page - 1) * limit;
   const slice = filtered.slice(start, start + limit);
   const hasMore = start + limit < filtered.length;
