@@ -83,7 +83,25 @@ const authController = {
   
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
+      const { email, password, resendOTP, purpose = 'login' } = req.body;
+
+      if (resendOTP) {
+        if (!email) {
+          return res.status(400).json({ message: 'Email is required' });
+        }
+
+        await authService.sendOTP(
+          email,
+          purpose,
+          getIP(req),
+          null
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'OTP sent successfully',
+        });
+      }
 
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
