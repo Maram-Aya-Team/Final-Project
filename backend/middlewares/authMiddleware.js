@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../schemas/userSchema');
-
-/** حماية المسارات - التحقق من وجود Token صالح */
 const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -20,7 +18,7 @@ const protect = async (req, res, next) => {
   }
 };
 
-/** دخول اختياري - يتعرف على المستخدم إذا كان مسجلاً، وإلا يكمل كـ Guest */
+/**مستخدم مسجل او زائر*/
 const optionalAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -29,11 +27,11 @@ const optionalAuth = async (req, res, next) => {
       const user = await User.findById(decoded.sub || decoded.id).select('-password');
       if (user && !user.isBanned) req.user = user;
     }
-  } catch { /* ضيف عادي */ }
+  } catch { /* ضيف  */ }
   next();
 };
 
-/** صلاحيات الأدمن فقط */
+/** صلاحيات الأدمن  */
 const requireAdmin = (req, res, next) => {
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Admin access required' });

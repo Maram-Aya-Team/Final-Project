@@ -2,7 +2,6 @@ const User=require("../models/userSchema");
 const bcrypt=require("bcrypt");
 const generateToken=require("../utils/generateToken");
 const authService = require("../services/authService");
-// استرجاع IP من الريكويست
 const getIP = (req) =>
   req.ip ||
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -82,7 +81,6 @@ const authController = {
     }
   },
   
-  // POST /auth/login
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
@@ -155,7 +153,6 @@ const authController = {
     try {
       // استرجاع الريفريش توكن من الكوكيز
       const rawRefreshToken = req.cookies?.refreshToken;
-
       const result = await authService.refreshTokens(
         rawRefreshToken,
         getIP(req),

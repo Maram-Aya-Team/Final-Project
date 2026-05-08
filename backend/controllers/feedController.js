@@ -1,10 +1,9 @@
 const feedService = require('../services/feedService'); 
 const { asyncHandler, sendSuccess, sendError } = require('../utils/helpers');
 const { emitNewLike, emitNewComment, emitUpdatePost } = require('../sockets/feedHandler');
-
 const feedController = {
 
-  // جلب المنشورات مع فلاتر ودعم السكرول اللانهائي
+  // فيتش المنشورات مع فلاتر ودعم السكرول اللانهائي
   getFeed: asyncHandler(async (req, res) => {
     const { type, city, category, cursor, limit } = req.query;
     const userId = req.user?._id;

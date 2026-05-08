@@ -8,15 +8,12 @@ const emailService = require('./emailService');
 
 const sha256 = (text) =>
   crypto.createHash('sha256').update(text).digest('hex');
- 
 const generateOTP = () =>
   crypto.randomInt(100000, 1000000).toString();
-
 const generateRefreshToken = () =>
   crypto.randomBytes(40).toString('hex');
 
 const authService = {
-
   async login(email, password, ip, userAgent) {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
@@ -24,11 +21,10 @@ const authService = {
     if (!user)      throw { status: 401, message: 'Invalid email or password' };
     if (user.isBanned) throw { status: 403, message: 'User is banned' };
     if (!user.password) throw { status: 400, message: 'Use Google login instead' };
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw { status: 401, message: 'Invalid email or password' };
 
-    // إذا الإيميل مش مفعل، ابعت OTP
+    // إذا الإيميل مش اكتف ابعت OTP
     if (!user.isEmailVerified) {
       await authService.sendOTP(normalizedEmail, 'email_verification', ip, user._id);
       return { status: 'otp_required', email: normalizedEmail, reason: 'email_not_verified' };

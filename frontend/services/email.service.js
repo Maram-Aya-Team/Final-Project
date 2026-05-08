@@ -1,6 +1,4 @@
 const nodemailer = require('nodemailer');
-
-// إعداد الـ transporter مرة وحدة
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -8,8 +6,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
-// نصوص الـ OTP حسب الغرض
 const purposeConfig = {
   email_verification: {
     subject: 'Verify your FoundIt JO account',
