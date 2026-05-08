@@ -1,11 +1,11 @@
 const emailService = {
-  async sendOTP(email, otp, purpose = 'login') {
+  async sendOTP(email, purpose = 'login') {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const response = await fetch(`${apiBaseUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email, otp, purpose, resendOTP: true }),
+      body: JSON.stringify({ email, purpose, resendOTP: true }),
     });
 
     const data = await response.json();

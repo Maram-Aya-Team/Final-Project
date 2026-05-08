@@ -6,6 +6,7 @@ import { authAPI } from '../../../services/auth.api';
 import styles from '../../../styles/auth.module.css';
 import { FiMail, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 const OTP_LENGTH = 6;
+const RESEND_COOLDOWN_SECONDS = 60;
 export default function OTPPage() {
   const router = useRouter();
   const [email] = useState(() =>
@@ -18,7 +19,7 @@ export default function OTPPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [timerSeconds, setTimerSeconds] = useState(60);
+  const [timerSeconds, setTimerSeconds] = useState(RESEND_COOLDOWN_SECONDS);
   const [canResend, setCanResend] = useState(false);
   const [otpStatus, setOtpStatus] = useState('idle');
   const inputRefs = useRef([]);
@@ -35,8 +36,6 @@ export default function OTPPage() {
   //تايمر
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
-    setTimerSeconds(60);
-    setCanResend(false);
 
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
@@ -52,16 +51,7 @@ export default function OTPPage() {
 
   useEffect(() => {
     if (email) {
-      timerRef.current = setInterval(() => {
-        setTimerSeconds((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            setCanResend(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startTimer();
       const focusTimeout = setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
       return () => {
@@ -69,7 +59,7 @@ export default function OTPPage() {
         clearTimeout(focusTimeout);
       };
     }
-  }, [email]);
+  }, [email, startTimer]);
 
   // تغيير OTP
   const handleOtpChange = (index, value) => {
@@ -139,10 +129,14 @@ export default function OTPPage() {
       await authAPI.resendOTP(email, purpose);
 
       setSuccess('New code sent to your email.');
+      setTimerSeconds(RESEND_COOLDOWN_SECONDS);
+      setCanResend(false);
       startTimer();
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
     } catch (err) {
       setError(err.message || 'Failed to resend code.');
+      setTimerSeconds(RESEND_COOLDOWN_SECONDS);
+      setCanResend(false);
       startTimer();
     }
   };
