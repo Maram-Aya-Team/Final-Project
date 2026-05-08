@@ -91,7 +91,6 @@ const feedService = {
     }
     let nextCursor = null;
     if (finalPosts.length === limit) {
-
       const last = finalPosts[finalPosts.length - 1];
       if (!last.isFallback && last._id) {
         nextCursor = encodeCursor(last.rankScore || 0, last._id.toString());
@@ -162,7 +161,6 @@ const feedService = {
     };
   },
   async getPostById(postId, postType, userId) {
-
     const post = await Post.findOneAndUpdate(
       { _id: postId, type: postType },
       { $inc: { viewsCount: 1 } },
