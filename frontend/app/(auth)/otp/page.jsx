@@ -25,17 +25,17 @@ export default function OTPPage() {
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
-
   useEffect(() => {
     if (!email) {
       router.replace('/login');
     }
   }, [email, router]);
 
-  //تايمر
+  // مؤقت إعادة الإرسال
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
+    setTimerSeconds(RESEND_COOLDOWN_SECONDS);
+    setCanResend(false);
 
     timerRef.current = setInterval(() => {
       setTimerSeconds((prev) => {
@@ -51,7 +51,17 @@ export default function OTPPage() {
 
   useEffect(() => {
     if (email) {
-      startTimer();
+      clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setTimerSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
       const focusTimeout = setTimeout(() => inputRefs.current[0]?.focus(), 100);
 
       return () => {
@@ -129,14 +139,10 @@ export default function OTPPage() {
       await authAPI.resendOTP(email, purpose);
 
       setSuccess('New code sent to your email.');
-      setTimerSeconds(RESEND_COOLDOWN_SECONDS);
-      setCanResend(false);
       startTimer();
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
     } catch (err) {
       setError(err.message || 'Failed to resend code.');
-      setTimerSeconds(RESEND_COOLDOWN_SECONDS);
-      setCanResend(false);
       startTimer();
     }
   };
