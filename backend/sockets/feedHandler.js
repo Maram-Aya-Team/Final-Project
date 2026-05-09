@@ -13,12 +13,10 @@ function initSocket(httpServer) {
     pingTimeout: 60000,
     pingInterval: 25000,
   });
-
   // ميديا وير للتأكد من هوية المستخدم (لو ضيف مسموح يدخل)
   io.use((socket, next) => {
     try {
-      const token = socket.handshake.auth?.token ||
-                    socket.handshake.headers?.authorization?.split(' ')[1];
+      const token = socket.handshake.auth?.token ||socket.handshake.headers?.authorization?.split(' ')[1];
 
       if (token) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -33,9 +31,8 @@ function initSocket(httpServer) {
       next();
     }
   });
-
   io.on('connection', (socket) => {
-    // توزيع المستخدم على غرف حسب الفلتر (مدينة أو نوع المنشور)
+    // توزيع المستخدم على  حسب الفلتر 
     socket.on('join_feed', ({ type = 'all', city = null } = {}) => {
       socket.join('feed:all');
       if (type !== 'all') socket.join(`feed:${type}`);
@@ -57,8 +54,6 @@ function initSocket(httpServer) {
 
   return io;
 }
-
-// دالة بتبعت البوست الجديد لكل الغرف المهتمة (حسب المدينة والنوع)
 function emitNewPost(post) {
   if (!io) return;
 
@@ -74,28 +69,21 @@ function emitNewPost(post) {
       post,
       timestamp: new Date().toISOString(),
     });
-  });
-}
-
-// تحديثات عامة (لايك، كومنت، تغيير حالة) بتوصل لكل اللي فاتحين الفييد
+  });}
 function emitUpdatePost(postId, postType, changes) {
   if (!io) return;
-  io.to('feed:all').emit('update_post', { postId, postType, changes });
-}
+  io.to('feed:all').emit('update_post', { postId, postType, changes });}
 
 function emitNewLike(postId, postType, likesCount, userId) {
   if (!io) return;
-  io.to('feed:all').emit('new_like', { postId, postType, likesCount, byUserId: userId });
-}
+  io.to('feed:all').emit('new_like', { postId, postType, likesCount, byUserId: userId });}
 
 function emitNewComment(postId, postType, comment, commentsCount) {
   if (!io) return;
-  io.to('feed:all').emit('new_comment', { postId, postType, comment, commentsCount });
-}
+  io.to('feed:all').emit('new_comment', { postId, postType, comment, commentsCount });}
 
 function getIO() {
   if (!io) throw new Error('Socket not initialized');
-  return io;
-}
+  return io;}
 
 module.exports = { initSocket, getIO, emitNewPost, emitUpdatePost, emitNewLike, emitNewComment };

@@ -1,0 +1,121 @@
+const Claim = require('../models/claim.schema');
+const LostItem = require('../models/lostItemSchema');
+const FoundItem = require('../models/foundItemSchema');
+const notifService = require('./notificationService');
+
+const POPULATE = [
+  {path: 'claimant', select: 'name avatar'},
+  {path: 'postOwner', select: 'name avatar'},
+  {path: 'post', select: 'title images city type'},
+];
+
+const claimService = {
+  // إنشاء طلب ملكية جديد
+  async createClaim({claimantId, postId, postType, description, proofImages = []}) {
+    if (!description || description.trim().length < 20)
+      throw {status: 400, message: 'Description must be at least 20 characters'};
+
+    const Model = postType === 'FoundItem' ? FoundItem : LostItem;
+    const post = await Model.findById(postId).lean();
+
+    if (!post) throw {status: 404, message: 'Post not found'};
+    if (post.isResolved) throw {status: 400, message: 'Post is already resolved'};
+    if (post.user.toString() === claimantId.toString())
+      throw {status: 400, message: 'Cannot claim your own post'};
+
+    const claim = await Claim.create({
+      claimant: claimantId,
+      postType,
+      post: postId,
+      postOwner: post.user,
+      description: description.trim(),
+      proofImages,
+    });
+
+    // اشعار لصاحب البوست إنه في حد قدم طلب
+    await notifService.createNotification({
+      recipient: post.user,
+      actor: claimantId,
+      type: 'claim_submitted',
+      title: 'New Claim on Your Post 📋',
+      body: `Someone claims ownership of "${post.title}". Review their claim.`,
+      actionUrl: `/claims/${claim._id}`,
+      relatedEntity: {entityType: postType, entityId: postId},
+    }).catch(() => {});
+
+    return claim;
+  },
+
+  //  كل الطلبات اللي قدمها المستخدم أو اللي استلمها
+  async getMyClaims({userId, role = 'claimant', status, page = 1, limit = 10}) {
+    const safeLimit = Math.min(parseInt(limit), 30);
+    const skip = (parseInt(page) - 1) * safeLimit;
+    const filter = role === 'owner' ? {postOwner: userId} : {claimant: userId};
+    if (status && status !== 'all') filter.status = status;
+
+    const [claims, total] = await Promise.all([
+      Claim.find(filter).populate(POPULATE).sort({createdAt: -1}).skip(skip).limit(safeLimit).lean(),
+      Claim.countDocuments(filter),
+    ]);
+
+    return {claims, total, page: parseInt(page), pages: Math.ceil(total / safeLimit)};
+  },
+
+  //  تفاصيل طلب معين
+  async getClaimById(claimId, userId) {
+    const claim = await Claim.findOne({
+      _id: claimId,
+      $or: [{claimant: userId}, {postOwner: userId}],
+    }).populate(POPULATE).lean();
+    if (!claim) throw {status: 404, message: 'Claim not found'};
+    return claim;
+  },
+
+  // قبول الطلب وتسكير البوست
+  async acceptClaim(claimId, ownerId, reviewNote = '') {
+    const claim = await Claim.findOne({_id: claimId, postOwner: ownerId, status: 'pending'});
+    if (!claim) throw {status: 404, message: 'Claim not found or already reviewed'};
+
+    claim.status = 'accepted';
+    claim.reviewedAt = new Date();
+    claim.reviewNote = reviewNote;
+    await claim.save();
+
+    // حول حالة البوست لـ resolved عشان يختفي من الفيد
+    const Model = claim.postType === 'FoundItem' ? FoundItem : LostItem;
+    await Model.findByIdAndUpdate(claim.post, {isResolved: true});
+
+    await notifService.createNotification({
+      recipient: claim.claimant,
+      type: 'claim_approved',
+      title: 'Claim Accepted! ✓',
+      body: 'Your claim was accepted. You can now contact the post owner.',
+      actionUrl: `/claims/${claimId}`,
+    }).catch(() => {});
+
+    return claim;
+  },
+
+  // رفض الطلب
+  async rejectClaim(claimId, ownerId, reviewNote = '') {
+    const claim = await Claim.findOne({_id: claimId, postOwner: ownerId, status: 'pending'});
+    if (!claim) throw {status: 404, message: 'Claim not found'};
+
+    claim.status = 'rejected';
+    claim.reviewedAt = new Date();
+    claim.reviewNote = reviewNote;
+    await claim.save();
+
+    await notifService.createNotification({
+      recipient: claim.claimant,
+      type: 'claim_rejected',
+      title: 'Claim Rejected ⨉',
+      body: `Your claim was reviewed and rejected. ${reviewNote ? 'Note: ' + reviewNote : ''}`,
+      actionUrl: `/claims/${claimId}`,
+    }).catch(() => {});
+
+    return claim;
+  },
+};
+
+module.exports = claimService;
