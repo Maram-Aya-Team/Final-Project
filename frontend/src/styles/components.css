@@ -292,3 +292,59 @@
   background: #f8fafc;
   color: var(--navy);
 }
+
+/* Search */
+.searchPage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.searchHeader h1 {
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.searchHeader p {
+  color: var(--muted);
+}
+
+.searchFilters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.searchResults {
+  display: grid;
+  gap: 20px;
+}
+
+.postCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.postTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.postTop h3 {
+  color: var(--navy);
+}
+
+.postCard p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.postInfo {
+  display: flex;
+  gap: 16px;
+  color: var(--blue);
+  font-weight: 700;
+}
