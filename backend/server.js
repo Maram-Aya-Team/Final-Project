@@ -82,7 +82,7 @@ chatSocket(io);
 const mongoUri = process.env.DATABASE_URL || process.env.MONGO_URI;
 
 if (!mongoUri) {
-  console.error('MongoDB failed: missing DATABASE_URL or MONGO_URI in environment');
+  console.error('Failed to start: MongoDB connection requires DATABASE_URL or MONGO_URI');
   process.exit(1);
 }
 
