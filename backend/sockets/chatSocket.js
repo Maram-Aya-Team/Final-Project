@@ -10,29 +10,39 @@ const chatSocket = (io) => {
     // تسجيل المستخدم
     socket.on("register", (userId) => {
       connectedUsers.set(userId, socket.id);
-
       console.log("Registered user:", userId);
     });
 
     // دخول غرفة محادثة
     socket.on("joinConversation", (conversationId) => {
       socket.join(conversationId);
-
       console.log(`Joined room: ${conversationId}`);
     });
 
     // إرسال رسالة realtime
     socket.on("sendMessage", async (data) => {
       try {
-        const {
-          conversationId,
-          senderId,
-          content,
-        } = data;
+        const { conversationId, content } = data;
+
+        // ناخذ senderId من التوكن الموجود بالـ socket
+        const senderId = socket.userId;
+
+        if (!senderId) {
+          console.log("No senderId found on socket");
+          return;
+        }
+
+        if (!conversationId || !content) {
+          console.log("conversationId and content are required");
+          return;
+        }
 
         const conversation = await Conversation.findById(conversationId);
 
-        if (!conversation) return;
+        if (!conversation) {
+          console.log("Conversation not found");
+          return;
+        }
 
         const message = await Message.create({
           conversation: conversationId,
@@ -50,12 +60,12 @@ const chatSocket = (io) => {
 
         await conversation.save();
 
-        const populatedMessage = await Message.findById(message._id)
-          .populate("sender", "name email avatar");
+        const populatedMessage = await Message.findById(message._id).populate(
+          "sender",
+          "name email avatar"
+        );
 
-        // إرسال الرسالة لكل الموجودين بالغرفة
         io.to(conversationId).emit("newMessage", populatedMessage);
-
       } catch (err) {
         console.error(err);
       }
