@@ -9,6 +9,7 @@ const STOP_WORDS = new Set([
 ]);
 
 const MATCH_THRESHOLD = 40;
+const ALLOWED_MATCH_STATUSES = new Set(['pending', 'accepted', 'rejected', 'expired']);
 const POPULATE_MATCH = [
   {
     path: 'lostPost',
@@ -33,6 +34,7 @@ function extractKeywords(text = '') {
 }
 
 function keywordOverlap(wordsA, wordsB) {
+  if (!Array.isArray(wordsA) || !Array.isArray(wordsB)) return 0;
   if (!wordsA.length || !wordsB.length) return 0;
   const setA = new Set(wordsA);
   const setB = new Set(wordsB);
@@ -90,24 +92,33 @@ const matchService = {
       category: lostPost.category,
     }).lean();
 
+    const existingFoundPostIds = await Match.distinct('foundPost', { lostPost: lostPost._id });
+    const matchedFoundPostIds = new Set(existingFoundPostIds.map((id) => id.toString()));
     const created = [];
     for (const foundPost of candidates) {
       if (foundPost.user.toString() === lostPost.user.toString()) continue;
+      if (matchedFoundPostIds.has(foundPost._id.toString())) continue;
 
       const { total, breakdown } = computeScore(lostPost, foundPost);
       if (total < MATCH_THRESHOLD) continue;
 
-      const exists = await Match.exists({ lostPost: lostPost._id, foundPost: foundPost._id });
-      if (exists) continue;
-
-      const match = await Match.create({
-        lostPost: lostPost._id,
-        foundPost: foundPost._id,
-        lostUser: lostPost.user,
-        foundUser: foundPost.user,
-        similarityScore: total,
-        scoreBreakdown: breakdown,
-      });
+      let match;
+      try {
+        match = await Match.create({
+          lostPost: lostPost._id,
+          foundPost: foundPost._id,
+          lostUser: lostPost.user,
+          foundUser: foundPost.user,
+          similarityScore: total,
+          scoreBreakdown: breakdown,
+        });
+      } catch (err) {
+        if (err?.code === 11000) {
+          matchedFoundPostIds.add(foundPost._id.toString());
+          continue;
+        }
+        throw err;
+      }
 
       await Promise.all([
         notifService.createNotification({
@@ -128,21 +139,26 @@ const matchService = {
           relatedEntity: { entityType: 'Post', entityId: foundPost._id },
           metadata: { matchId: match._id, score: total },
         }),
-      ]).catch(() => {});
+      ]).catch((err) => {
+        console.warn('[MATCH NOTIFICATION ERROR]', err?.message || err);
+      });
 
       created.push(match);
+      matchedFoundPostIds.add(foundPost._id.toString());
     }
 
     return created;
   },
 
   async getMyMatches({ userId, status, page = 1, limit = 10 }) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) throw { status: 400, message: 'Invalid user id' };
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const safeLimit = Math.min(parseInt(limit, 10) || 10, 30);
     const safePage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (safePage - 1) * safeLimit;
 
-    const filter = { $or: [{ lostUser: userId }, { foundUser: userId }] };
-    if (status && status !== 'all') filter.status = status;
+    const filter = { $or: [{ lostUser: userObjectId }, { foundUser: userObjectId }] };
+    if (status && status !== 'all' && ALLOWED_MATCH_STATUSES.has(status)) filter.status = status;
 
     const [matches, total] = await Promise.all([
       Match.find(filter)
@@ -158,43 +174,53 @@ const matchService = {
   },
 
   async acceptMatch(matchId, userId) {
+    if (!mongoose.Types.ObjectId.isValid(matchId)) throw { status: 400, message: 'Invalid match id' };
+    if (!mongoose.Types.ObjectId.isValid(userId)) throw { status: 400, message: 'Invalid user id' };
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
     const match = await Match.findOne({
       _id: matchId,
       status: 'pending',
-      $or: [{ lostUser: userId }, { foundUser: userId }],
+      $or: [{ lostUser: userObjectId }, { foundUser: userObjectId }],
     });
     if (!match) throw { status: 404, message: 'Match not found or already reviewed' };
 
     match.status = 'accepted';
-    match.reviewedBy = userId;
+    match.reviewedBy = userObjectId;
     match.reviewedAt = new Date();
     await match.save();
 
-    const otherUser = match.lostUser.toString() === userId.toString() ? match.foundUser : match.lostUser;
+    const otherUser = match.lostUser.toString() === userObjectId.toString() ? match.foundUser : match.lostUser;
 
     await notifService.createNotification({
       recipient: otherUser,
-      type: 'match_found',
+      type: 'match_accepted',
       title: 'Match Accepted ✅',
       body: 'The other party accepted the match. You can now contact each other.',
       actionUrl: '/my-matches',
       relatedEntity: { entityType: 'Post', entityId: match.lostPost },
       metadata: { matchId: match._id },
-    }).catch(() => {});
+    }).catch((err) => {
+      console.warn('[MATCH ACCEPT NOTIFICATION ERROR]', err?.message || err);
+    });
 
     return match;
   },
 
   async rejectMatch(matchId, userId, note = '') {
+    if (!mongoose.Types.ObjectId.isValid(matchId)) throw { status: 400, message: 'Invalid match id' };
+    if (!mongoose.Types.ObjectId.isValid(userId)) throw { status: 400, message: 'Invalid user id' };
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
     const match = await Match.findOne({
       _id: matchId,
       status: 'pending',
-      $or: [{ lostUser: userId }, { foundUser: userId }],
+      $or: [{ lostUser: userObjectId }, { foundUser: userObjectId }],
     });
     if (!match) throw { status: 404, message: 'Match not found' };
 
     match.status = 'rejected';
-    match.reviewedBy = userId;
+    match.reviewedBy = userObjectId;
     match.reviewedAt = new Date();
     match.rejectedNote = note;
     await match.save();

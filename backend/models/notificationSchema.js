@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const NOTIFICATION_TYPES = [
-  'match_found', 'new_message', 'claim_submitted', 'claim_approved', 'claim_rejected', 
+  'match_found', 'match_accepted', 'new_message', 'claim_submitted', 'claim_approved', 'claim_rejected', 
   'post_expired', 'post_resolved', 'report_action', 'system_alert', 'qr_scanned', 
   'new_like', 'new_comment'
 ];
@@ -37,6 +37,7 @@ NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 // اعدادات فرونت (لازم تتعدل وقبت الفرونت)
 NotificationSchema.statics.TYPE_CONFIG = {
   match_found: { icon: 'Target', color: '#22C55E', label: 'Match Found' },
+  match_accepted: { icon: 'CheckCircle', color: '#16A34A', label: 'Match Accepted' },
   new_message: { icon: 'MessageCircle', color: '#2563EB', label: 'New Message' },
   claim_submitted: { icon: 'ClipboardList', color: '#F59E0B', label: 'Claim Submitted' },
   claim_approved: { icon: 'CheckCircle', color: '#22C55E', label: 'Claim Approved' },

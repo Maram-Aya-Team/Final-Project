@@ -26,7 +26,13 @@ const matchController = {
   runMatching: asyncHandler(async (req, res) => {
     const { lostPostId } = req.params;
     const matches = await matchService.runMatchingForLostPost(lostPostId);
-    return res.status(200).json({ success: true, data: { created: matches?.length || 0 } });
+    return res.status(200).json({
+      success: true,
+      data: {
+        created: matches?.length || 0,
+        matchIds: (matches || []).map((m) => m._id),
+      },
+    });
   }),
 };
 
