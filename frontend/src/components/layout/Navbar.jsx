@@ -16,9 +16,9 @@ export default function Navbar() {
       </div>
 
       <div className="navbarActions">
-        <Link href="/login">Login</Link>
+        <Link href="/login">تسجيل الدخول</Link>
         <Link href="/register" className="registerBtn">
-          Register
+          إنشاء حساب
         </Link>
       </div>
     </nav>

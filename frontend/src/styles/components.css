@@ -24,53 +24,20 @@
 }
 
 /* Input */
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.inputLabel {
-  font-weight: 700;
-  color: var(--navy);
-}
-
-.inputField {
-  height: 48px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding-inline: 14px;
-  background: white;
-  outline: none;
-  transition: 0.2s;
-  font-size: 15px;
-}
-
-.inputField:focus {
-  border-color: var(--blue);
-}
-
-.inputError {
-  border-color: var(--danger);
-}
-
-.inputErrorText {
-  color: var(--danger);
-  font-size: 14px;
-}
-
-/* Select */
+.inputGroup,
 .selectGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.inputLabel,
 .selectLabel {
   font-weight: 700;
   color: var(--navy);
 }
 
+.inputField,
 .selectField {
   height: 48px;
   border: 1px solid var(--border);
@@ -79,17 +46,19 @@
   background: white;
   outline: none;
   font-size: 15px;
-  cursor: pointer;
 }
 
+.inputField:focus,
 .selectField:focus {
   border-color: var(--blue);
 }
 
+.inputError,
 .selectError {
   border-color: var(--danger);
 }
 
+.inputErrorText,
 .selectErrorText {
   color: var(--danger);
   font-size: 14px;
@@ -147,22 +116,20 @@
   color: var(--green);
 }
 
-.navbarLinks {
+.navbarLinks,
+.navbarActions {
   display: flex;
+  align-items: center;
   gap: 24px;
-  color: var(--muted);
   font-weight: 600;
+}
+
+.navbarLinks {
+  color: var(--muted);
 }
 
 .navbarLinks a:hover {
   color: var(--blue);
-}
-
-.navbarActions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-weight: 700;
 }
 
 .registerBtn {
@@ -392,6 +359,8 @@
   border-radius: 18px;
   padding: 20px;
   min-height: 420px;
+  max-height: 520px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -399,12 +368,15 @@
 
 .chatBubbleRow {
   display: flex;
+  width: 100%;
 }
 
+/* رسائلي */
 .chatBubbleRow.mine {
   justify-content: flex-start;
 }
 
+/* رسائل الطرف الثاني */
 .chatBubbleRow.theirs {
   justify-content: flex-end;
 }
@@ -414,22 +386,43 @@
   padding: 12px 16px;
   border-radius: 16px;
   line-height: 1.7;
+  word-break: break-word;
 }
 
 .mineBubble {
   background: var(--blue);
   color: white;
+  border-bottom-right-radius: 4px;
 }
 
 .theirBubble {
   background: #f1f5f9;
   color: var(--navy);
+  border-bottom-left-radius: 4px;
+}
+
+.senderName {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.mineBubble .senderName {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .messageInput {
   display: flex;
   gap: 12px;
   margin-top: 16px;
+  background: white;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: sticky;
+  bottom: 16px;
 }
 
 .messageInput input {
