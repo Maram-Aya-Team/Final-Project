@@ -1,6 +1,5 @@
 const Claim = require('../models/claim.schema');
-const LostItem = require('../models/lostItemSchema');
-const FoundItem = require('../models/foundItemSchema');
+const Post = require('../models/postSchema');
 const notifService = require('./notificationService');
 
 const POPULATE = [
@@ -15,8 +14,16 @@ const claimService = {
     if (!description || description.trim().length < 20)
       throw {status: 400, message: 'Description must be at least 20 characters'};
 
-    const Model = postType === 'FoundItem' ? FoundItem : LostItem;
-    const post = await Model.findById(postId).lean();
+    const normalizedType = String(postType || '').toLowerCase();
+    const allowedTypes = {
+      found: 'found',
+      lost: 'lost',
+      founditem: 'found',
+      lostitem: 'lost',
+    };
+    const resolvedType = allowedTypes[normalizedType];
+    if (!resolvedType) throw {status: 400, message: 'postType must be lost/found'};
+    const post = await Post.findOne({ _id: postId, type: resolvedType }).lean();
 
     if (!post) throw {status: 404, message: 'Post not found'};
     if (post.isResolved) throw {status: 400, message: 'Post is already resolved'};
@@ -25,7 +32,6 @@ const claimService = {
 
     const claim = await Claim.create({
       claimant: claimantId,
-      postType,
       post: postId,
       postOwner: post.user,
       description: description.trim(),
@@ -40,7 +46,7 @@ const claimService = {
       title: 'New Claim on Your Post 📋',
       body: `Someone claims ownership of "${post.title}". Review their claim.`,
       actionUrl: `/claims/${claim._id}`,
-      relatedEntity: {entityType: postType, entityId: postId},
+      relatedEntity: {entityType: resolvedType, entityId: postId},
     }).catch(() => {});
 
     return claim;
@@ -48,8 +54,9 @@ const claimService = {
 
   //  كل الطلبات اللي قدمها المستخدم أو اللي استلمها
   async getMyClaims({userId, role = 'claimant', status, page = 1, limit = 10}) {
-    const safeLimit = Math.min(parseInt(limit), 30);
-    const skip = (parseInt(page) - 1) * safeLimit;
+    const safeLimit = Math.min(parseInt(limit, 10) || 10, 30);
+    const safePage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (safePage - 1) * safeLimit;
     const filter = role === 'owner' ? {postOwner: userId} : {claimant: userId};
     if (status && status !== 'all') filter.status = status;
 
@@ -58,7 +65,7 @@ const claimService = {
       Claim.countDocuments(filter),
     ]);
 
-    return {claims, total, page: parseInt(page), pages: Math.ceil(total / safeLimit)};
+    return {claims, total, page: safePage, pages: Math.ceil(total / safeLimit)};
   },
 
   //  تفاصيل طلب معين
@@ -82,8 +89,7 @@ const claimService = {
     await claim.save();
 
     // حول حالة البوست لـ resolved عشان يختفي من الفيد
-    const Model = claim.postType === 'FoundItem' ? FoundItem : LostItem;
-    await Model.findByIdAndUpdate(claim.post, {isResolved: true});
+    await Post.findByIdAndUpdate(claim.post, {isResolved: true});
 
     await notifService.createNotification({
       recipient: claim.claimant,
