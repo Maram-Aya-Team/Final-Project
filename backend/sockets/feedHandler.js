@@ -7,7 +7,7 @@ function attachFeedHandlers() {
   if (!io || feedHandlersAttached) return;
   feedHandlersAttached = true;
   io.on('connection', (socket) => {
-    // توزيع المستخدم على  حسب الفلتر 
+    // توزيع المستخدم على حسب الفلتر
     socket.on('join_feed', ({ type = 'all', city = null } = {}) => {
       socket.join('feed:all');
       if (type !== 'all') socket.join(`feed:${type}`);
