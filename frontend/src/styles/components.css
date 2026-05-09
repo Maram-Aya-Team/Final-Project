@@ -178,3 +178,117 @@
   margin: 0 auto;
   padding: 32px 24px;
 }
+
+/* Admin */
+.adminLayout {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+}
+
+.adminSidebar {
+  width: 260px;
+  background: var(--navy);
+  color: white;
+  padding: 24px;
+}
+
+.adminLogo {
+  font-size: 24px;
+  margin-bottom: 32px;
+}
+
+.adminLogo span {
+  color: var(--green);
+}
+
+.adminNav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adminNav a {
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: white;
+}
+
+.adminNav a:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.adminMain {
+  flex: 1;
+}
+
+.adminHeader {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 24px 32px;
+}
+
+.adminHeader h1 {
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.adminHeader p {
+  color: var(--muted);
+}
+
+.adminContent {
+  padding: 32px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.statCard {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.statCard p {
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.statCard h3 {
+  font-size: 30px;
+  color: var(--navy);
+}
+
+.statCard span {
+  color: var(--green);
+  font-size: 14px;
+}
+
+.tableWrapper {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.adminTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adminTable th,
+.adminTable td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+}
+
+.adminTable th {
+  background: #f8fafc;
+  color: var(--navy);
+}
