@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/userSchema');
 const Post = require('../models/postSchema');
 const cache = require('../utils/cache');

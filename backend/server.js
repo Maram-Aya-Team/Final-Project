@@ -12,12 +12,15 @@ const authRoutes = require('./routes/authRoutes');
 const postRoutes = require('./routes/postRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const claimRoutes = require('./routes/claimRoutes');
+const mapsRoutes = require('./routes/mapsRoutes');
 const conversationRoutes = require("./routes/conversationRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const adminDashboardRoutes=require("./routes/adminDashboardRoutes");
 const adminReportRoutes = require("./routes/adminReportRoutes");
 const adminFraudRoutes = require("./routes/adminFraudRoutes");
 const { initNotificationSocket } = require('./sockets/notificationHandler');
+const { bindSocketServer } = require('./sockets/feedHandler');
 const chatSocket = require("./sockets/chatSocket");
 
 const app = express();
@@ -48,6 +51,8 @@ app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/profile', profileRoutes);
+app.use('/claims', claimRoutes);
+app.use('/maps', mapsRoutes);
 
 app.get('/', (req, res) => res.json({ success: true, message: 'FoundIt JO Backend ✅' }));
 app.use((req, res) => res.status(404).json({ message: 'الرابط غير موجود' }));
@@ -77,9 +82,17 @@ io.use((socket, next) => {
   }
 });
 initNotificationSocket(io);
+bindSocketServer(io);
 chatSocket(io);
 
-mongoose.connect(process.env.DATABASE_URL)
+const mongoUri = process.env.DATABASE_URL || process.env.MONGO_URI;
+
+if (!mongoUri) {
+  console.error('Failed to start: MongoDB connection requires DATABASE_URL or MONGO_URI');
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri)
   .then(() => {
     console.log('Connected to MongoDB');
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
