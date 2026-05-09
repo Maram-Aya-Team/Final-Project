@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Claim = require('../models/claim.schema');
 const Post = require('../models/postSchema');
 const notifService = require('./notificationService');
@@ -15,15 +16,12 @@ const claimService = {
       throw {status: 400, message: 'Description must be at least 20 characters'};
 
     const normalizedType = String(postType || '').toLowerCase();
-    const allowedTypes = {
-      found: 'found',
-      lost: 'lost',
-      founditem: 'found',
-      lostitem: 'lost',
-    };
-    const resolvedType = allowedTypes[normalizedType];
+    const legacyTypeMap = { founditem: 'found', lostitem: 'lost' };
+    const resolvedType = ['lost', 'found'].includes(normalizedType) ? normalizedType : legacyTypeMap[normalizedType];
     if (!resolvedType) throw {status: 400, message: 'postType must be lost/found'};
-    const post = await Post.findOne({ _id: postId, type: resolvedType }).lean();
+    if (!mongoose.Types.ObjectId.isValid(postId)) throw {status: 400, message: 'Invalid postId'};
+    const postObjectId = new mongoose.Types.ObjectId(postId);
+    const post = await Post.findOne({ _id: postObjectId, type: resolvedType }).lean();
 
     if (!post) throw {status: 404, message: 'Post not found'};
     if (post.isResolved) throw {status: 400, message: 'Post is already resolved'};
