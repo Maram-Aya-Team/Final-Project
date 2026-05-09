@@ -42,7 +42,7 @@ const profileController = {
     return res.status(200).json({ success: true, data: result });
   }),
   toggleSavePost: asyncHandler(async (req, res) => {
-    const postId = req.params.postId || req.params.id;
+    const { postId } = req.params;
     if (!postId) {
       return res.status(400).json({ success: false, message: 'postId is required' });
     }
