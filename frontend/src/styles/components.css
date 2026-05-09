@@ -348,3 +348,119 @@
   color: var(--blue);
   font-weight: 700;
 }
+
+/* Chat */
+.conversationCard {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.conversationCard h3 {
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.conversationCard p {
+  color: var(--muted);
+}
+
+.chatHeader {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.chatHeader h2 {
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.chatHeader p {
+  color: var(--muted);
+}
+
+.chatMessages {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chatBubbleRow {
+  display: flex;
+}
+
+.chatBubbleRow.mine {
+  justify-content: flex-start;
+}
+
+.chatBubbleRow.theirs {
+  justify-content: flex-end;
+}
+
+.chatBubble {
+  max-width: 65%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.7;
+}
+
+.mineBubble {
+  background: var(--blue);
+  color: white;
+}
+
+.theirBubble {
+  background: #f1f5f9;
+  color: var(--navy);
+}
+
+.messageInput {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.messageInput input {
+  flex: 1;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding-inline: 14px;
+  outline: none;
+}
+
+.messageInput input:focus {
+  border-color: var(--blue);
+}
+
+/* Messages Pages */
+.messagesPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.messagesPage h1 {
+  color: var(--navy);
+}
+
+.messagesPage > p {
+  color: var(--muted);
+}
+
+.conversationsList {
+  display: grid;
+  gap: 16px;
+}
