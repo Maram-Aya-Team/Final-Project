@@ -79,7 +79,14 @@ io.use((socket, next) => {
 initNotificationSocket(io);
 chatSocket(io);
 
-mongoose.connect(process.env.DATABASE_URL)
+const mongoUri = process.env.DATABASE_URL || process.env.MONGO_URI;
+
+if (!mongoUri) {
+  console.error('MongoDB failed: missing DATABASE_URL or MONGO_URI in environment');
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri)
   .then(() => {
     console.log('Connected to MongoDB');
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
