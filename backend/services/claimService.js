@@ -18,7 +18,7 @@ const claimService = {
     const normalizedType = String(postType || '').toLowerCase();
     const legacyTypeMap = { founditem: 'found', lostitem: 'lost' };
     const resolvedType = ['lost', 'found'].includes(normalizedType) ? normalizedType : legacyTypeMap[normalizedType];
-    if (!resolvedType) throw {status: 400, message: 'postType must be lost, found, LostItem, or FoundItem'};
+    if (!resolvedType) throw {status: 400, message: 'Invalid postType. Expected: lost, found, LostItem, or FoundItem'};
     if (!mongoose.Types.ObjectId.isValid(postId)) throw {status: 400, message: 'Invalid postId'};
     const postObjectId = new mongoose.Types.ObjectId(postId);
     const post = await Post.findOne({ _id: postObjectId, type: resolvedType }).lean();
