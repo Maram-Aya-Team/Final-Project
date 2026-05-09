@@ -44,7 +44,7 @@ const claimService = {
       title: 'New Claim on Your Post 📋',
       body: `Someone claims ownership of "${post.title}". Review their claim.`,
       actionUrl: `/claims/${claim._id}`,
-      relatedEntity: {entityType: resolvedType, entityId: postObjectId},
+      relatedEntity: {entityType: 'Post', entityId: postObjectId},
     }).catch(() => {});
 
     return claim;
