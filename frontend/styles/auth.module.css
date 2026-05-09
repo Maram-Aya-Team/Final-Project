@@ -166,7 +166,7 @@
 .checkLabel {
   display: flex; align-items: center; gap: 8px;
   font-size: 13px; color: #475569;
-  cursor: pointer; user-select: none;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
 }
 .customCheck {
   width: 18px; height: 18px;
