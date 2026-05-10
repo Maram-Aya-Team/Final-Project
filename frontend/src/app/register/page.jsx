@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 import { JORDAN_CITIES } from "../../constants/cities";
-import { User, Mail, Lock, MapPin, ImagePlus, Smartphone } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 
 export default function RegisterPage() {
