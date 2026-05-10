@@ -1,6 +1,6 @@
 import { apiRequest } from "./api";
 
-export const getPosts = (filters = {}) => {
+const toQueryString = (filters = {}) => {
   const params = new URLSearchParams();
 
   Object.entries(filters).forEach(([key, value]) => {
@@ -9,16 +9,23 @@ export const getPosts = (filters = {}) => {
     }
   });
 
-  return apiRequest(`/posts?${params.toString()}`);
+  return params.toString();
 };
 
-export const getPostById = (id) => {
-  return apiRequest(`/posts/${id}`);
+export const getFeedPosts = (filters = {}) => {
+  const query = toQueryString(filters);
+  return apiRequest(`/posts/feed${query ? `?${query}` : ""}`);
 };
 
-export const createPost = (postData) => {
-  return apiRequest("/posts", {
+export const getPosts = (filters = {}) => {
+  const query = toQueryString(filters);
+  return apiRequest(`/posts${query ? `?${query}` : ""}`);
+};
+
+export const getPostById = (id) => apiRequest(`/posts/${id}`);
+
+export const createPost = (postData) =>
+  apiRequest("/posts", {
     method: "POST",
     body: JSON.stringify(postData),
   });
-};
