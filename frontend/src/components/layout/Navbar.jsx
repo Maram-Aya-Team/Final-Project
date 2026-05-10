@@ -4,52 +4,135 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
+import {
+  House,
+  Map,
+  Bell,
+  MessageCircle,
+  Search,
+} from "lucide-react";
+
 const links = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/map", label: "الخريطة" },
-  { href: "/notifications", label: "الإشعارات" },
-  { href: "/messages", label: "الرسائل" },
-  { href: "/search", label: "البحث" },
+  {
+    href: "/",
+    label: "الرئيسية",
+    icon: <House size={18} />,
+  },
+  {
+    href: "/map",
+    label: "الخريطة",
+    icon: <Map size={18} />,
+  },
+  {
+    href: "/notifications",
+    label: "الإشعارات",
+    icon: <Bell size={18} />,
+  },
+  {
+    href: "/messages",
+    label: "الرسائل",
+    icon: <MessageCircle size={18} />,
+  },
+  {
+    href: "/search",
+    label: "البحث",
+    icon: <Search size={18} />,
+  },
 ];
 
 export default function Navbar() {
+
   const pathname = usePathname();
-  const { isAuthenticated, logout } = useAuth();
+
+  const {
+    isAuthenticated,
+    logout,
+  } = useAuth();
 
   return (
-    <nav className="navbar shell">
-      <Link href="/" className="navbarBrand">
-        FounIt JO
-      </Link>
 
-      <div className="navbarLinks">
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={pathname === link.href ? "active" : ""}
-          >
-            {link.label}
-          </Link>
-        ))}
-      </div>
+    <header className="navbarWrapper">
 
-      <div className="navbarActions">
-        {isAuthenticated ? (
-          <button className="btn btn-outline" onClick={logout}>
-            تسجيل الخروج
-          </button>
-        ) : (
-          <>
-            <Link href="/login" className="btn btn-outline">
-              تسجيل الدخول
+      <nav className="navbar shell">
+
+        {/* LOGO */}
+
+        <Link
+          href="/"
+          className="navbarBrand"
+        >
+          <span className="brandDot"></span>
+
+          FoundIt JO
+        </Link>
+
+        {/* LINKS */}
+
+        <div className="navbarLinks">
+
+          {links.map((link) => (
+
+            <Link
+              key={link.href}
+              href={link.href}
+              className={
+                pathname === link.href
+                  ? "navLink active"
+                  : "navLink"
+              }
+            >
+
+              {link.icon}
+
+              <span>
+                {link.label}
+              </span>
+
             </Link>
-            <Link href="/register" className="btn btn-primary">
-              إنشاء حساب
-            </Link>
-          </>
-        )}
-      </div>
-    </nav>
+
+          ))}
+
+        </div>
+
+        {/* ACTIONS */}
+
+        <div className="navbarActions">
+
+          {isAuthenticated ? (
+
+            <button
+              className="btn btnOutline"
+              onClick={logout}
+            >
+              تسجيل الخروج
+            </button>
+
+          ) : (
+
+            <>
+
+              <Link
+                href="/login"
+                className="btn btnOutline"
+              >
+                تسجيل الدخول
+              </Link>
+
+              <Link
+                href="/register"
+                className="btn btnPrimary"
+              >
+                إنشاء حساب
+              </Link>
+
+            </>
+
+          )}
+
+        </div>
+
+      </nav>
+
+    </header>
   );
 }

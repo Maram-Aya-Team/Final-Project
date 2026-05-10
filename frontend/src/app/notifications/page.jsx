@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import Button from "../../components/ui/Button";
-import Card from "../../components/ui/Card";
 import {
   clearReadNotifications,
   getNotifications,
@@ -11,106 +9,166 @@ import {
   markNotificationAsRead,
 } from "../../services/notificationService";
 
+import {
+  Bell,
+  CheckCheck,
+  Trash2,
+  Clock,
+  Target,
+  MessageCircle,
+  MapPin,
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
+
 const formatDate = (value) => {
   if (!value) return "";
-  return new Date(value).toLocaleString("ar-JO");
+  const d = new Date(value);
+  const now = new Date();
+  const diff = now - d;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  if (mins < 1) return "الآن";
+  if (mins < 60) return `منذ ${mins} دقيقة`;
+  if (hours < 24) return `منذ ${hours} ساعة`;
+  return d.toLocaleDateString("ar-JO");
+};
+
+const getNotifStyle = (type) => {
+  const map = {
+    match: { icon: Target, color: "#2563eb", bg: "#dbeafe", label: "تطابق" },
+    message: { icon: MessageCircle, color: "#059669", bg: "#d1fae5", label: "رسالة" },
+    found: { icon: CheckCircle2, color: "#16a34a", bg: "#dcfce7", label: "تم العثور" },
+    lost: { icon: MapPin, color: "#dc2626", bg: "#fee2e2", label: "مفقود" },
+  };
+  return map[type] || { icon: Bell, color: "#d97706", bg: "#fef3c7", label: "إشعار" };
 };
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     let active = true;
-
-    getNotifications({ limit: 30 })
-      .then((data) => {
-        if (!active) return;
-        setNotifications(data?.data || []);
-      })
-      .catch((err) => {
-        if (!active) return;
-        setError(err.message || "تعذر تحميل الإشعارات");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
+    getNotifications({ limit: 50 })
+      .then((data) => { if (active) setNotifications(data?.data || []); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
-  const markOneAsRead = async (id) => {
-    try {
-      await markNotificationAsRead(id);
-      setNotifications((prev) => prev.map((item) => (item._id === id ? { ...item, isRead: true } : item)));
-    } catch (err) {
-      setError(err.message || "تعذر تحديث الإشعار");
-    }
+  const markOne = async (id) => {
+    await markNotificationAsRead(id);
+    setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
   };
 
   const markAll = async () => {
-    try {
-      await markAllNotificationsAsRead();
-      setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
-    } catch (err) {
-      setError(err.message || "تعذر تحديث الإشعارات");
-    }
+    await markAllNotificationsAsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const clearRead = async () => {
-    try {
-      await clearReadNotifications();
-      setNotifications((prev) => prev.filter((item) => !item.isRead));
-    } catch (err) {
-      setError(err.message || "تعذر حذف الإشعارات المقروءة");
-    }
+    await clearReadNotifications();
+    setNotifications(prev => prev.filter(n => !n.isRead));
   };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const displayed = activeTab === "unread" ? notifications.filter(n => !n.isRead) : notifications;
 
   return (
     <MainLayout>
-      <section className="pageHeader split">
-        <div>
-          <h1>الإشعارات</h1>
-          <p>متابعة التنبيهات الخاصة بحسابك.</p>
+      <div className="notifContainer">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div>
+            <h1 className="notifPageTitle">
+              الإشعارات <Bell className="text-yellow-500 fill-yellow-500" size={28} />
+              {unreadCount > 0 && <span className="notifBadgeCount">{unreadCount}</span>}
+            </h1>
+            <p className="text-slate-400 font-bold text-sm mt-1 px-1">جميع التحديثات في مكان واحد</p>
+          </div>
+
+          {/* الأزرار بالعرض - Forced Horizontal Row */}
+          <div className="flex flex-row items-center gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
+            <button 
+              onClick={() => setActiveTab("unread")}
+              className={`notifActionBtn shrink-0 ${activeTab === 'unread' ? 'active shadow-md border-blue-200' : ''}`}
+              style={activeTab === 'unread' ? {color: 'var(--blue)', background: 'var(--white)'} : {}}
+            >
+              غير مقروء
+            </button>
+            <button 
+              onClick={() => setActiveTab("all")}
+              className={`notifActionBtn shrink-0 ${activeTab === 'all' ? 'active shadow-md' : ''}`}
+              style={activeTab === 'all' ? {color: 'var(--blue)', background: 'var(--white)'} : {}}
+            >
+              الكل
+            </button>
+            <div className="w-[1px] h-6 bg-slate-200 mx-1 shrink-0"></div>
+            <button onClick={markAll} className="notifActionBtn shrink-0">
+              <CheckCheck size={16} className="text-blue-600" /> تحديد الكل
+            </button>
+            <button onClick={clearRead} className="notifActionBtn clear shrink-0">
+              <Trash2 size={16} /> حذف المقروء
+            </button>
+          </div>
         </div>
 
-        <div className="rowActions">
-          <Button variant="outline" onClick={() => void markAll()}>
-            تعليم الكل كمقروء
-          </Button>
-          <Button variant="outline" onClick={() => void clearRead()}>
-            حذف المقروء
-          </Button>
-        </div>
-      </section>
-
-      {error && <div className="stateError">{error}</div>}
-
-      <div className="notificationList">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, index) => <div key={index} className="skeletonCard" />)
-        ) : notifications.length === 0 ? (
-          <div className="stateEmpty">لا توجد إشعارات</div>
-        ) : (
-          notifications.map((item) => (
-            <Card key={item._id} className={`notificationCard ${item.isRead ? "read" : "unread"}`}>
-              <div>
-                <h3>{item.title || "إشعار"}</h3>
-                <p>{item.body || item.message || ""}</p>
-                <small>{formatDate(item.createdAt)}</small>
+        {/* Content Area */}
+        <div className="min-h-[450px]">
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <div key={i} className="h-24 bg-white/50 animate-pulse rounded-[28px]" />)}
+            </div>
+          ) : displayed.length === 0 ? (
+            
+            /* Empty State */
+            <div className="notifEmptyState">
+              <div className="notifEmptyIcon">
+                <Bell size={40} className="text-slate-300" />
               </div>
+              <h3 className="text-xl font-black text-[#152b5b]">لا توجد إشعارات</h3>
+              <p className="text-slate-400 font-medium mt-1">يبدو أن كل شيء هادئ حالياً!</p>
+            </div>
 
-              {!item.isRead && (
-                <Button variant="outline" onClick={() => void markOneAsRead(item._id)}>
-                  تعليم كمقروء
-                </Button>
-              )}
-            </Card>
-          ))
-        )}
+          ) : (
+            <div className="space-y-4" dir="rtl">
+              {displayed.map((item) => {
+                const style = getNotifStyle(item.type);
+                const Icon = style.icon;
+                return (
+                  <div key={item._id} className={`notifCard ${!item.isRead ? 'unread' : 'read'}`}>
+                    {!item.isRead && <span className="unreadDot" />}
+                    
+                    <div className="notifIconBox" style={{ backgroundColor: style.bg, color: style.color }}>
+                      <Icon size={24} />
+                    </div>
+
+                    <div className="notifContent text-right">
+                      <div className="notifMainRow">
+                        <h4 className="notifTitle">{item.title || style.label}</h4>
+                        <div className="notifTimeBox">
+                          <Clock size={12} /> {formatDate(item.createdAt)}
+                        </div>
+                      </div>
+                      <p className="notifMessage">{item.body || item.message}</p>
+                      
+                      <div className="notifFooter">
+                        <span className="notifTag">{style.label}</span>
+                        {!item.isRead && (
+                          <button onClick={() => markOne(item._id)} className="markReadBtn">
+                            تحديد كمقروء
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </MainLayout>
   );

@@ -1,37 +1,22 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import MainLayout from "../../components/layout/MainLayout";
-import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
-import Card from "../../components/ui/Card";
-import Select from "../../components/ui/Select";
+import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 import { JORDAN_CITIES } from "../../constants/cities";
+import { User, Mail, Lock, MapPin, ImagePlus, Smartphone } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    city: "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "", city: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const updateField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
-
     try {
       await register(form);
       router.push("/");
@@ -43,52 +28,71 @@ export default function RegisterPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="authWrap">
-        <Card className="authCard">
-          <h1>إنشاء حساب</h1>
-          <p>ابدأ باستخدام FounIt JO بخطوات بسيطة.</p>
+    <div className="authPage">
+      <div className="authSide">
+        <div className="authSideBrand">FoundIt <span>Jo</span></div>
+        <div className="authSideContent">
+          <h2>انضم لمجتمعنا </h2>
+          <p>ساهم في إعادة المفقودات لأصحابها وكن جزءاً من منصتنا الذكية.</p>
+         <img 
+  src="/images/register-illustration.png"
+  alt="Illustration-register" 
+  className="authIllustration" 
+/>
+        </div>
+      </div>
+
+  <div className="authMain" style={{ 
+          backgroundColor: "#ffffff",
+          borderTopRightRadius: "60px", 
+          borderBottomRightRadius: "60px",
+          marginRight: "-60px", 
+          paddingRight: "60px", 
+          zIndex: 10,
+          position: "relative"
+      }}>
+
+        <div className="authCard" style={{ boxShadow: "none" }}>
+          <div className="authCardHeader">
+            <h1>FoundIt <span style={{ color: "#2563eb" }}>Jo</span></h1>
+            <p>إنشاء حساب جديد</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="authForm">
-            <Input
-              type="text"
-              placeholder="الاسم الكامل"
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              required
-            />
-            <Input
-              type="email"
-              placeholder="البريد الإلكتروني"
-              value={form.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="كلمة المرور"
-              value={form.password}
-              onChange={(e) => updateField("password", e.target.value)}
-              required
-            />
-            <Select
-              value={form.city}
-              onChange={(e) => updateField("city", e.target.value)}
-              options={[
-                { label: "اختر المدينة", value: "" },
-                ...JORDAN_CITIES.map((city) => ({ label: city, value: city })),
-              ]}
-              required
-            />
+            <input className="inputField" type="text" placeholder="الاسم الكامل" required 
+                   onChange={(e) => setForm({...form, name: e.target.value})} />
+            
+            <input className="inputField" type="email" placeholder="البريد الإلكتروني" required 
+                   onChange={(e) => setForm({...form, email: e.target.value})} />
 
+            <input className="inputField" type="password" placeholder="كلمة المرور" required 
+                   onChange={(e) => setForm({...form, password: e.target.value})} />
+
+            <select className="selectField" required onChange={(e) => setForm({...form, city: e.target.value})}>
+              <option value="">اختر المدينة</option>
+              {JORDAN_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+            </select>
+
+         
             {error && <div className="stateError">{error}</div>}
 
-            <Button type="submit" disabled={loading}>
+            <button className="btn btn-primary w100" type="submit" disabled={loading}>
               {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-            </Button>
+            </button>
           </form>
-        </Card>
+
+          <div className="authDivider">أو سجل بواسطة</div>
+
+          <div className="authAlt">
+            <button className="authAltBtn"><FaGoogle color="#DB4437" /> Google</button>
+            <button className="authAltBtn"><Smartphone size={18} /> OTP</button>
+          </div>
+
+          <div className="authLink">
+             لديك حساب بالفعل؟ <Link href="/login" style={{ color: "#2563eb", fontWeight: "bold" }}>تسجيل الدخول</Link>
+          </div>
+        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }
