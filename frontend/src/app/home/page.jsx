@@ -212,7 +212,11 @@ export default function Home() {
   }, [filter, search]);
 
   useEffect(() => {
-    fetchPosts(1, true);
+    const timer = setTimeout(() => {
+      fetchPosts(1, true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [filter, search, fetchPosts]);
 
   /* ── Infinite Scroll Observer ── */

@@ -268,7 +268,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    loadPosts();
+    const timer = setTimeout(() => {
+      loadPosts();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [loadPosts]);
 
   /* فلترة المنشورات */
