@@ -1,25 +1,54 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
+
+const links = [
+  { href: "/", label: "الرئيسية" },
+  { href: "/map", label: "الخريطة" },
+  { href: "/notifications", label: "الإشعارات" },
+  { href: "/messages", label: "الرسائل" },
+  { href: "/search", label: "البحث" },
+];
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const { isAuthenticated, logout } = useAuth();
+
   return (
-    <nav className="navbar">
-      <Link href="/" className="navbarLogo">
-        Found<span>It</span> JO
+    <nav className="navbar shell">
+      <Link href="/" className="navbarBrand">
+        FounIt JO
       </Link>
 
       <div className="navbarLinks">
-        <Link href="/">الرئيسية</Link>
-        <Link href="/search">البحث</Link>
-        <Link href="/messages">الرسائل</Link>
-        <Link href="/profile">الملف الشخصي</Link>
-        <Link href="/admin">لوحة التحكم</Link>
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={pathname === link.href ? "active" : ""}
+          >
+            {link.label}
+          </Link>
+        ))}
       </div>
 
       <div className="navbarActions">
-        <Link href="/login">تسجيل الدخول</Link>
-        <Link href="/register" className="registerBtn">
-          إنشاء حساب
-        </Link>
+        {isAuthenticated ? (
+          <button className="btn btn-outline" onClick={logout}>
+            تسجيل الخروج
+          </button>
+        ) : (
+          <>
+            <Link href="/login" className="btn btn-outline">
+              تسجيل الدخول
+            </Link>
+            <Link href="/register" className="btn btn-primary">
+              إنشاء حساب
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );

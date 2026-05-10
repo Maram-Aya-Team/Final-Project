@@ -9,9 +9,10 @@ export default function MessageInput({ onSend }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!content.trim()) return;
+    const cleaned = content.trim();
+    if (!cleaned) return;
 
-    onSend(content);
+    onSend(cleaned);
     setContent("");
   };
 
@@ -20,10 +21,12 @@ export default function MessageInput({ onSend }) {
       <input
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="اكتب رسالتك..."
+        placeholder="اكتب رسالتك"
       />
 
-      <Button type="submit">إرسال</Button>
+      <Button type="submit" disabled={!content.trim()}>
+        إرسال
+      </Button>
     </form>
   );
 }
