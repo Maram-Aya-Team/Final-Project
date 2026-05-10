@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import MainLayout from "../../components/layout/MainLayout";
 import Input from "../../components/ui/Input";
@@ -22,7 +22,7 @@ export default function SearchPage() {
     status: "",
   });
 
-  const loadPosts = useCallback(async () => {
+  const loadPosts = async () => {
     setLoading(true);
     setError("");
 
@@ -34,11 +34,33 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  };
 
   useEffect(() => {
-    void loadPosts();
-  }, [loadPosts]);
+    let active = true;
+
+    getPosts({
+      keyword: "",
+      city: "",
+      type: "",
+      status: "",
+    })
+      .then((data) => {
+        if (!active) return;
+        setPosts(data?.posts || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تحميل النتائج");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

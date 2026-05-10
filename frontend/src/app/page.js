@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import MainLayout from "../components/layout/MainLayout";
 import Badge from "../components/ui/Badge";
@@ -18,14 +18,42 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadPosts = useCallback(async () => {
+  useEffect(() => {
+    let active = true;
+
+    getFeedPosts({ limit: 20 })
+      .then((feed) => {
+        if (!active) return null;
+        const feedItems = feed?.data;
+        if (Array.isArray(feedItems)) {
+          setPosts(feedItems);
+          return null;
+        }
+        return getPosts({ limit: 20 });
+      })
+      .then((fallback) => {
+        if (!active || !fallback) return;
+        setPosts(fallback?.posts || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تحميل المنشورات");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleRefresh = async () => {
     setLoading(true);
     setError("");
-
     try {
       const feed = await getFeedPosts({ limit: 20 });
       const feedItems = feed?.data;
-
       if (Array.isArray(feedItems)) {
         setPosts(feedItems);
       } else {
@@ -37,11 +65,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    void loadPosts();
-  }, [loadPosts]);
+  };
 
   return (
     <MainLayout>
@@ -63,7 +87,7 @@ export default function Home() {
       <section className="feedSection">
         <div className="sectionHead">
           <h2>أحدث المنشورات</h2>
-          <Button variant="outline" onClick={() => void loadPosts()}>
+          <Button variant="outline" onClick={() => void handleRefresh()}>
             تحديث
           </Button>
         </div>

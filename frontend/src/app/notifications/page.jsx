@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "../../components/layout/MainLayout";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -21,23 +21,26 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadNotifications = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const data = await getNotifications({ limit: 30 });
-      setNotifications(data?.data || []);
-    } catch (err) {
-      setError(err.message || "تعذر تحميل الإشعارات");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void loadNotifications();
-  }, [loadNotifications]);
+    let active = true;
+
+    getNotifications({ limit: 30 })
+      .then((data) => {
+        if (!active) return;
+        setNotifications(data?.data || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تحميل الإشعارات");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const markOneAsRead = async (id) => {
     try {

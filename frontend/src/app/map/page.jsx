@@ -44,6 +44,7 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState("");
+  const [refreshIndex, setRefreshIndex] = useState(0);
 
   const cityLookup = useMemo(() => {
     const map = {};
@@ -97,60 +98,66 @@ export default function MapPage() {
     });
   }, [items]);
 
-  const initMap = useCallback(async () => {
+  useEffect(() => {
+    let active = true;
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
-      setError("مفتاح Google Maps غير مضاف في إعدادات البيئة");
-      return;
+      Promise.resolve().then(() => {
+        if (active) setError("مفتاح Google Maps غير مضاف في إعدادات البيئة");
+      });
+      return () => {
+        active = false;
+      };
     }
 
-    try {
-      await loadGoogleMaps(apiKey);
-
-      if (!mapContainerRef.current || mapRef.current) return;
-
-      mapRef.current = new window.google.maps.Map(mapContainerRef.current, {
-        center: AMMAN_CENTER,
-        zoom: 8,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
+    loadGoogleMaps(apiKey)
+      .then(() => {
+        if (!active || !mapContainerRef.current || mapRef.current) return;
+        mapRef.current = new window.google.maps.Map(mapContainerRef.current, {
+          center: AMMAN_CENTER,
+          zoom: 8,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+        setMapReady(true);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تهيئة الخريطة");
       });
 
-      setMapReady(true);
-    } catch (err) {
-      setError(err.message || "تعذر تهيئة الخريطة");
-    }
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [citiesResponse, itemsResponse] = await Promise.all([
-        getMapCities(),
-        getMapItems({ type: filters.type, city: filters.city, radius: filters.radius }),
-      ]);
-
-      setCities(citiesResponse || []);
-      setItems(itemsResponse?.items || []);
-    } catch (err) {
-      setError(err.message || "تعذر تحميل بيانات الخريطة");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters.city, filters.radius, filters.type]);
-
   useEffect(() => {
-    void initMap();
-  }, [initMap]);
+    let active = true;
 
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    Promise.all([
+      getMapCities(),
+      getMapItems({ type: filters.type, city: filters.city, radius: filters.radius }),
+    ])
+      .then(([citiesResponse, itemsResponse]) => {
+        if (!active) return;
+        setCities(citiesResponse || []);
+        setItems(itemsResponse?.items || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تحميل بيانات الخريطة");
+        setItems([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [filters.city, filters.radius, filters.type, refreshIndex]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -166,7 +173,15 @@ export default function MapPage() {
   }, [cityLookup, filters.city, mapReady]);
 
   const updateFilter = (key, value) => {
+    setLoading(true);
+    setError("");
     setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    setError("");
+    setRefreshIndex((prev) => prev + 1);
   };
 
   return (
@@ -176,7 +191,7 @@ export default function MapPage() {
           <h1>الخريطة</h1>
           <p>عرض المنشورات على خريطة الأردن حسب النوع والمدينة.</p>
         </div>
-        <Button variant="outline" onClick={() => void loadData()}>
+        <Button variant="outline" onClick={handleRefresh}>
           تحديث
         </Button>
       </section>

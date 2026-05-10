@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import MainLayout from "../../../components/layout/MainLayout";
 import Card from "../../../components/ui/Card";
@@ -20,25 +20,28 @@ export default function PostDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadPost = useCallback(async () => {
+  useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
-    setError("");
+    let active = true;
 
-    try {
-      const data = await getPostById(id);
-      setPost(data?.post || null);
-    } catch (err) {
-      setError(err.message || "تعذر تحميل تفاصيل المنشور");
-    } finally {
-      setLoading(false);
-    }
+    getPostById(id)
+      .then((data) => {
+        if (!active) return;
+        setPost(data?.post || null);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message || "تعذر تحميل تفاصيل المنشور");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [id]);
-
-  useEffect(() => {
-    void loadPost();
-  }, [loadPost]);
 
   return (
     <MainLayout>
