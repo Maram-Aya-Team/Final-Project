@@ -24,8 +24,9 @@ export const getPosts = (filters = {}) => {
 
 export const getPostById = (id) => apiRequest(`/posts/${id}`);
 
-export const createPost = (postData) =>
-  apiRequest("/posts", {
+export const createPost = async (postData) => {
+  return apiRequest("/posts", {
     method: "POST",
-    body: JSON.stringify(postData),
+    body: postData,
   });
+};

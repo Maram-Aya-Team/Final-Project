@@ -23,6 +23,7 @@ const adminFraudRoutes = require("./routes/adminFraudRoutes");
 const { initNotificationSocket } = require('./sockets/notificationHandler');
 const { bindSocketServer } = require('./sockets/feedHandler');
 const chatSocket = require("./sockets/chatSocket");
+require("./config/google");
 
 const app = express();
 const server = http.createServer(app);

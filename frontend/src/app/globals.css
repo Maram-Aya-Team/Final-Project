@@ -1678,3 +1678,14 @@ img {
   max-width: 100%;
   height: auto;
 }
+.formGroup{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.formLabel{
+  font-size:14px;
+  font-weight:700;
+  color:#334155;
+}

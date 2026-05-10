@@ -10,6 +10,7 @@ import {
   Bell,
   MessageCircle,
   Search,
+  PlusCircle,
 } from "lucide-react";
 
 const links = [
@@ -17,6 +18,11 @@ const links = [
     href: "/",
     label: "الرئيسية",
     icon: <House size={18} />,
+  },
+  {
+    href: "/create-post",
+    label: "إضافة منشور",
+    icon: <PlusCircle size={18} />,
   },
   {
     href: "/map",
@@ -41,107 +47,56 @@ const links = [
 ];
 
 export default function Navbar() {
-
   const pathname = usePathname();
 
-  const {
-    isAuthenticated,
-    logout,
-  } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
-
     <header className="navbarWrapper">
-
       <nav className="navbar shell">
+        <Link href="/" className="navbarBrand">
+          <img
+            src="/images/icon.png"
+            alt="FoundIt"
+            className="navbarLogo"
+          />
 
-        {/* LOGO */}
-
-        <Link
-  href="/"
-  className="navbarBrand"
->
-  <img
-    src="/images/icon.png"
-    alt="FoundIt"
-    className="navbarLogo"
-  />
-
-  <span>
-    FoundIt JO
-  </span>
-</Link>
-
-        {/* LINKS */}
+          <span>FoundIt JO</span>
+        </Link>
 
         {isAuthenticated && (
-
-        <div className="navbarLinks">
-
-          {links.map((link) => (
-
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                pathname === link.href
-                  ? "navLink active"
-                  : "navLink"
-              }
-            >
-
-              {link.icon}
-
-              <span>
-                {link.label}
-              </span>
-
-            </Link>
-
-          ))}
-
-        </div>
+          <div className="navbarLinks">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={pathname === link.href ? "navLink active" : "navLink"}
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </div>
         )}
 
-        {/* ACTIONS */}
-
         <div className="navbarActions">
-
           {isAuthenticated ? (
-
-            <button
-              className="btn btn-outline"
-              onClick={logout}
-            >
+            <button className="btn btn-outline" onClick={logout}>
               تسجيل الخروج
             </button>
-
           ) : (
-
             <>
-
-              <Link
-                href="/login"
-                className="btn btn-outline"
-              >
+              <Link href="/login" className="btn btn-outline">
                 تسجيل الدخول
               </Link>
 
-              <Link
-                href="/register"
-                className="btn btnPrimary"
-              >
+              <Link href="/register" className="btn btn-primary">
                 إنشاء حساب
               </Link>
-
             </>
-
           )}
-
         </div>
-
       </nav>
-
     </header>
   );
 }

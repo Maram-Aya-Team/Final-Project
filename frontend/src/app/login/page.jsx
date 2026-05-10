@@ -109,8 +109,12 @@ export default function LoginPage() {
           <div className="authDivider">أو سجل بواسطة</div>
 
           <div className="authAlt">
-            <button className="authAltBtn"><FaGoogle color="#DB4437" /> Google</button>
-            <button className="authAltBtn"><Smartphone size={18} /> OTP</button>
+<a
+  className="authAltBtn"
+  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/auth/google`}
+>
+  <FaGoogle color="#DB4437" /> Google
+</a>            <button className="authAltBtn"><Smartphone size={18} /> OTP</button>
           </div>
 
           <div className="authLink">
