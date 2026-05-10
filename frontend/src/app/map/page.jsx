@@ -1,37 +1,42 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
 import MainLayout from "../../components/layout/MainLayout";
 import Select from "../../components/ui/Select";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import { getMapCities, getMapItems } from "../../services/mapService";
 
-const GOOGLE_MAPS_SRC = "https://maps.googleapis.com/maps/api/js";
 const AMMAN_CENTER = { lat: 31.9539, lng: 35.9106 };
+const MAPBOX_STYLESHEET = "https://api.mapbox.com/mapbox-gl-js/v3.23.1/mapbox-gl.css";
 
-const loadGoogleMaps = (apiKey) =>
-  new Promise((resolve, reject) => {
-    if (typeof window === "undefined") return resolve(null);
-    if (window.google?.maps) return resolve(window.google.maps);
+const ensureMapboxStylesheet = () => {
+  if (typeof document === "undefined") return;
+  if (document.querySelector("link[data-mapbox='true']")) return;
 
-    const existing = document.querySelector("script[data-google-maps='true']");
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = MAPBOX_STYLESHEET;
+  link.dataset.mapbox = "true";
+  document.head.appendChild(link);
+};
 
-    if (existing) {
-      existing.addEventListener("load", () => resolve(window.google?.maps));
-      existing.addEventListener("error", () => reject(new Error("تعذر تحميل الخريطة")));
-      return;
-    }
+const createPopupNode = (item) => {
+  const wrapper = document.createElement("div");
+  wrapper.style.fontFamily = "Cairo, sans-serif";
+  wrapper.style.minWidth = "180px";
 
-    const script = document.createElement("script");
-    script.src = `${GOOGLE_MAPS_SRC}?key=${apiKey}&language=ar`;
-    script.async = true;
-    script.defer = true;
-    script.dataset.googleMaps = "true";
-    script.onload = () => resolve(window.google?.maps);
-    script.onerror = () => reject(new Error("تعذر تحميل الخريطة"));
-    document.body.appendChild(script);
-  });
+  const title = document.createElement("strong");
+  title.textContent = item?.title || "بدون عنوان";
+  wrapper.appendChild(title);
+
+  const details = document.createElement("div");
+  details.textContent = `${item?.city || ""} - ${item?.area || ""}`;
+  wrapper.appendChild(details);
+
+  return wrapper;
+};
 
 export default function MapPage() {
   const mapContainerRef = useRef(null);
@@ -55,12 +60,12 @@ export default function MapPage() {
   }, [cities]);
 
   const clearMarkers = () => {
-    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
   };
 
   const renderMarkers = useCallback(() => {
-    if (!mapRef.current || !window.google?.maps) return;
+    if (!mapRef.current) return;
 
     clearMarkers();
 
@@ -72,27 +77,20 @@ export default function MapPage() {
       const lng = Number(coordinates[0]);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
-      const marker = new window.google.maps.Marker({
-        map: mapRef.current,
-        position: { lat, lng },
-        title: item.title,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillOpacity: 1,
-          fillColor: item.type === "lost" ? "#DC2626" : "#22C55E",
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-      });
+      const markerElement = document.createElement("div");
+      markerElement.style.width = "14px";
+      markerElement.style.height = "14px";
+      markerElement.style.borderRadius = "50%";
+      markerElement.style.backgroundColor = item.type === "lost" ? "#DC2626" : "#22C55E";
+      markerElement.style.border = "2px solid #ffffff";
+      markerElement.style.boxShadow = "0 0 0 1px rgba(15,23,42,0.12)";
 
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `<div style=\"font-family:Cairo,sans-serif;min-width:180px\"><strong>${item.title}</strong><br/>${item.city || ""} - ${item.area || ""}</div>`,
-      });
+      const popup = new mapboxgl.Popup({ offset: 18 }).setDOMContent(createPopupNode(item));
 
-      marker.addListener("click", () => {
-        infoWindow.open({ anchor: marker, map: mapRef.current });
-      });
+      const marker = new mapboxgl.Marker({ element: markerElement })
+        .setLngLat([lng, lat])
+        .setPopup(popup)
+        .addTo(mapRef.current);
 
       markersRef.current.push(marker);
     });
@@ -100,36 +98,48 @@ export default function MapPage() {
 
   useEffect(() => {
     let active = true;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-    if (!apiKey) {
+    if (!token) {
       Promise.resolve().then(() => {
-        if (active) setError("مفتاح Google Maps غير مضاف في إعدادات البيئة");
+        if (active) setError("مفتاح Mapbox غير مضاف في إعدادات البيئة");
       });
       return () => {
         active = false;
       };
     }
 
-    loadGoogleMaps(apiKey)
-      .then(() => {
-        if (!active || !mapContainerRef.current || mapRef.current) return;
-        mapRef.current = new window.google.maps.Map(mapContainerRef.current, {
-          center: AMMAN_CENTER,
-          zoom: 8,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        });
-        setMapReady(true);
-      })
-      .catch((err) => {
-        if (!active) return;
-        setError(err.message || "تعذر تهيئة الخريطة");
-      });
+    ensureMapboxStylesheet();
+    mapboxgl.accessToken = token;
+
+    if (!mapContainerRef.current || mapRef.current) return undefined;
+
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [AMMAN_CENTER.lng, AMMAN_CENTER.lat],
+      zoom: 8,
+      attributionControl: false,
+    });
+
+    mapRef.current.on("load", () => {
+      if (!active) return;
+      setMapReady(true);
+    });
+
+    mapRef.current.on("error", () => {
+      if (!active) return;
+      setError("تعذر تهيئة الخريطة");
+    });
 
     return () => {
       active = false;
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 
@@ -168,8 +178,11 @@ export default function MapPage() {
     if (!mapReady || !filters.city || !cityLookup[filters.city]) return;
 
     const city = cityLookup[filters.city];
-    mapRef.current.panTo({ lat: city.lat, lng: city.lng });
-    mapRef.current.setZoom(11);
+    mapRef.current.flyTo({
+      center: [city.lng, city.lat],
+      zoom: 11,
+      essential: true,
+    });
   }, [cityLookup, filters.city, mapReady]);
 
   const updateFilter = (key, value) => {
@@ -260,7 +273,7 @@ export default function MapPage() {
         </aside>
 
         <div className="mapCanvas card">
-          <div ref={mapContainerRef} className="googleMapRoot" />
+          <div ref={mapContainerRef} className="mapboxRoot" />
         </div>
       </section>
     </MainLayout>
