@@ -17,8 +17,7 @@ import {
   Target,
   MessageCircle,
   MapPin,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from "lucide-react";
 
 const formatDate = (value) => {

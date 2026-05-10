@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import MainLayout from "../components/layout/MainLayout";
 
 import {
@@ -228,10 +228,7 @@ export default function Home() {
 
   /* تحميل المنشورات */
 
-  const loadPosts = async () => {
-
-    setLoading(true);
-
+  const loadPosts = useCallback(async () => {
     try {
 
       const feed =
@@ -258,7 +255,7 @@ export default function Home() {
         );
       }
 
-    } catch (err) {
+    } catch {
 
       setError(
         "تعذر تحميل المنشورات"
@@ -268,11 +265,15 @@ export default function Home() {
 
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadPosts();
-  }, []);
+    const timer = setTimeout(() => {
+      loadPosts();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [loadPosts]);
 
   /* فلترة المنشورات */
 

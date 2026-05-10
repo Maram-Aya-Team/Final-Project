@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import MainLayout from "../components/layout/MainLayout";
+import MainLayout from "../../components/layout/MainLayout";
+import { getPosts } from "../../services/postService";
 import {
   Search, MapPin, Calendar, Heart,
   MessageCircle, Send, Eye, UserCircle,
-  SlidersHorizontal, ChevronDown, Sparkles,
+  SlidersHorizontal, Sparkles,
   RefreshCw
 } from "lucide-react";
 
@@ -145,19 +146,16 @@ export default function Home() {
     else setLoadingMore(true);
 
     try {
-      // بناء URL مع الفلاتر
-      const params = new URLSearchParams();
-      params.set("page", pageNum);
-      params.set("limit", 8);
-      if (filter !== "all") params.set("type", filter);
-      if (search) params.set("q", search);
+      const data = await getPosts({
+        page: pageNum,
+        limit: 8,
+        ...(filter !== "all" ? { type: filter } : {}),
+        ...(search ? { keyword: search } : {}),
+      });
 
-      const res = await fetch(`/api/posts?${params.toString()}`);
-      const data = await res.json();
-
-      const newPosts = data.posts || data || [];
+      const newPosts = data?.posts || [];
       setPosts((prev) => (reset || pageNum === 1 ? newPosts : [...prev, ...newPosts]));
-      setHasMore(newPosts.length === 6);
+      setHasMore(pageNum < (data?.totalPages || 1));
     } catch {
       /* خطأ في الاتصال — البيانات التجريبية للعرض */
       const demo = [
@@ -214,9 +212,12 @@ export default function Home() {
   }, [filter, search]);
 
   useEffect(() => {
-    setPage(1);
-    fetchPosts(1, true);
-  }, [filter, search]);
+    const timer = setTimeout(() => {
+      fetchPosts(1, true);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [filter, search, fetchPosts]);
 
   /* ── Infinite Scroll Observer ── */
   useEffect(() => {
@@ -236,6 +237,7 @@ export default function Home() {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setPage(1);
     setSearch(searchInput);
   };
 
@@ -260,7 +262,10 @@ export default function Home() {
               <select
                 className="homeheroSelect"
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={(e) => {
+                  setPage(1);
+                  setFilter(e.target.value);
+                }}
               >
                 <option value="all">نوع الغرض</option>
                 <option value="lost">مفقود</option>
@@ -313,7 +318,10 @@ export default function Home() {
               <button
                 key={t}
                 className={`homeheroToggleBtn ${filter === t ? "homeheroToggleActive" : ""}`}
-                onClick={() => setFilter(t)}
+                onClick={() => {
+                  setPage(1);
+                  setFilter(t);
+                }}
               >
                 {t === "all" ? "الكل" : t === "lost" ? "مفقود" : "موجود"}
               </button>

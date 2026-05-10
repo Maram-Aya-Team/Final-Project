@@ -96,7 +96,7 @@ export default function MapPage() {
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState("");
   const [refreshIndex, setRefreshIndex] = useState(0);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [, setSelectedItem] = useState(null);
 
   const cityLookup = useMemo(() => {
     const map = {};
