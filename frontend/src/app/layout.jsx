@@ -3,8 +3,8 @@ import "../styles/components.css";
 import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
-  title: "FoundIt JO",
-  description: "Lost and Found Platform",
+  title: "FounIt JO",
+  description: "منصة FounIt JO",
 };
 
 export default function RootLayout({ children }) {
