@@ -1,41 +1,66 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { loginUser, logoutUser } from "../services/authService";
+import { createContext, useContext, useState } from "react";
+import { loginUser, logoutUser, registerUser } from "../services/authService";
 
 const AuthContext = createContext(null);
 
+const getSavedToken = () =>
+  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+const getSavedUser = () => {
+  if (typeof window === "undefined") return null;
+
+  const rawUser = localStorage.getItem("user");
+
+  if (!rawUser) return null;
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    return null;
+  }
+};
+
+const persistSession = (token, user) => {
+  if (typeof window === "undefined") return;
+
+  if (token) localStorage.setItem("accessToken", token);
+  if (user) localStorage.setItem("user", JSON.stringify(user));
+};
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(getSavedUser);
+  const [accessToken, setAccessToken] = useState(getSavedToken);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("accessToken");
-    const savedUser = localStorage.getItem("user");
+  const applyAuthResponse = (data) => {
+    const token = data?.accessToken || data?.token;
+    const nextUser = data?.user || null;
 
-    if (savedToken) setAccessToken(savedToken);
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (token) {
+      persistSession(token, nextUser);
+      setAccessToken(token);
+    }
 
-    setLoading(false);
-  }, []);
-
-  const login = async (email, password) => {
-    const data = await loginUser({ email, password });
-
-    if (data.accessToken) {
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      setAccessToken(data.accessToken);
-      setUser(data.user);
+    if (nextUser) {
+      setUser(nextUser);
     }
 
     return data;
   };
 
-  const logout = () => {
-    logoutUser();
+  const login = async (email, password) => {
+    const data = await loginUser({ email, password });
+    return applyAuthResponse(data);
+  };
+
+  const register = async (payload) => {
+    const data = await registerUser(payload);
+    return applyAuthResponse(data);
+  };
+
+  const logout = async () => {
+    await logoutUser();
     setUser(null);
     setAccessToken(null);
   };
@@ -45,10 +70,11 @@ export function AuthProvider({ children }) {
       value={{
         user,
         accessToken,
-        loading,
+        loading: false,
         isAuthenticated: !!accessToken,
         isAdmin: user?.role === "admin",
         login,
+        register,
         logout,
       }}
     >
@@ -57,6 +83,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

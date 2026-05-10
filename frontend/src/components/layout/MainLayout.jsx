@@ -2,12 +2,9 @@ import Navbar from "./Navbar";
 
 export default function MainLayout({ children }) {
   return (
-    <div className="layout">
+    <div className="layoutRoot">
       <Navbar />
-
-      <main className="mainContent">
-        {children}
-      </main>
+      <main className="shell pageWrap">{children}</main>
     </div>
   );
 }
