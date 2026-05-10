@@ -58,15 +58,23 @@ export default function Navbar() {
         {/* LOGO */}
 
         <Link
-          href="/"
-          className="navbarBrand"
-        >
-          <span className="brandDot"></span>
+  href="/"
+  className="navbarBrand"
+>
+  <img
+    src="/images/icon.png"
+    alt="FoundIt"
+    className="navbarLogo"
+  />
 
-          FoundIt JO
-        </Link>
+  <span>
+    FoundIt JO
+  </span>
+</Link>
 
         {/* LINKS */}
+
+        {isAuthenticated && (
 
         <div className="navbarLinks">
 
@@ -93,6 +101,7 @@ export default function Navbar() {
           ))}
 
         </div>
+        )}
 
         {/* ACTIONS */}
 
@@ -101,7 +110,7 @@ export default function Navbar() {
           {isAuthenticated ? (
 
             <button
-              className="btn btnOutline"
+              className="btn btn-outline"
               onClick={logout}
             >
               تسجيل الخروج
@@ -113,7 +122,7 @@ export default function Navbar() {
 
               <Link
                 href="/login"
-                className="btn btnOutline"
+                className="btn btn-outline"
               >
                 تسجيل الدخول
               </Link>

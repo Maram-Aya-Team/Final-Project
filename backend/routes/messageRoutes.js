@@ -10,8 +10,8 @@ const { protect } = require("../middlewares/authMiddleware");
 const router = express.Router();
 router.use(protect);
 
-router.post("/", protect, sendMessage);
-router.get("/:conversationId", protect, getMessagesByConversation);
-router.delete("/:id", protect, deleteMessageForEveryone);
+router.post("/",  sendMessage);
+router.get("/:conversationId",  getMessagesByConversation);
+router.delete("/:id",  deleteMessageForEveryone);
 
 module.exports = router;

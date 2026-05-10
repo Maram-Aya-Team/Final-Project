@@ -1,16 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { loginUser, logoutUser, registerUser } from "../services/authService";
 
 const AuthContext = createContext(null);
 
-const getSavedToken = () =>
-  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-
 const getSavedUser = () => {
-  if (typeof window === "undefined") return null;
-
   const rawUser = localStorage.getItem("user");
 
   if (!rawUser) return null;
@@ -23,15 +18,23 @@ const getSavedUser = () => {
 };
 
 const persistSession = (token, user) => {
-  if (typeof window === "undefined") return;
-
   if (token) localStorage.setItem("accessToken", token);
   if (user) localStorage.setItem("user", JSON.stringify(user));
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getSavedUser);
-  const [accessToken, setAccessToken] = useState(getSavedToken);
+  const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const savedUser = getSavedUser();
+
+    setAccessToken(token);
+    setUser(savedUser);
+    setLoading(false);
+  }, []);
 
   const applyAuthResponse = (data) => {
     const token = data?.accessToken || data?.token;
@@ -61,6 +64,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     await logoutUser();
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+
     setUser(null);
     setAccessToken(null);
   };
@@ -70,7 +77,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         accessToken,
-        loading: false,
+        loading,
         isAuthenticated: !!accessToken,
         isAdmin: user?.role === "admin",
         login,

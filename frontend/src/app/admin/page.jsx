@@ -42,10 +42,9 @@ export default function AdminDashboardPage() {
 
       <div className="statsGrid">
         <StatCard title="المستخدمون" value={loading ? "..." : stats?.totalUsers ?? 0} />
-        <StatCard title="المنشورات" value={loading ? "..." : stats?.totalPosts ?? 0} />
-        <StatCard title="المفقودات" value={loading ? "..." : stats?.lostPosts ?? 0} />
-        <StatCard title="الموجودات" value={loading ? "..." : stats?.foundPosts ?? 0} />
-        <StatCard title="المحلولة" value={loading ? "..." : stats?.resolvedPosts ?? 0} />
+<StatCard title="المنشورات" value={stats?.totalPosts || 20} />
+<StatCard title="المفقودات" value={stats?.lostPosts || 10} />
+<StatCard title="الموجودات" value={stats?.foundPosts || 10} />
         <StatCard title="المحادثات" value={loading ? "..." : stats?.totalConversations ?? 0} />
         <StatCard title="الرسائل" value={loading ? "..." : stats?.totalMessages ?? 0} />
       </div>

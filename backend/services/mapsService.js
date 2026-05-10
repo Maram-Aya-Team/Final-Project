@@ -27,9 +27,9 @@ const PROJECTION = {
 const mapsService = {
 
   // يجيب العناصر للخريطة مع فلترة مدينة / نوع / مسافة
-  async getMapItems({ city, type = "all", lat, lng, radius = 50, limit = 200 }) {
+  async getMapItems({ city, type = "all", lat, lng, radius = 50, limit = 100 }) {
     // حماية من limit كبير يخرب الأداء
-    const safeLimit = Math.min(parseInt(limit) || 200, 500);
+    const safeLimit = Math.min(parseInt(limit) || 100, 200);
     // Mongo بده المسافة بالمتر
     const radiusM = parseFloat(radius) * 1000;
     // اذا في موقع مستخدم بنستخدم geoNear

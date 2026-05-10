@@ -15,18 +15,24 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await login(form.email, form.password);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  try {
+    const data = await login(form.email, form.password);
+
+    if (data?.user?.role === "admin") {
+      router.push("/admin");
+    } else {
       router.push("/");
-    } catch (err) {
-      setError(err.message || "تعذر تسجيل الدخول");
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    setError(err.message || "تعذر تسجيل الدخول");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="authPage">

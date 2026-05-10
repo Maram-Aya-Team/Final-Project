@@ -6,6 +6,8 @@ const SOCKET_URL =
 let socket = null;
 
 export const connectSocket = () => {
+  if (socket?.connected) return socket;
+
   const token = localStorage.getItem("accessToken");
 
   socket = io(SOCKET_URL, {

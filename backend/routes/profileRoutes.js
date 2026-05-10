@@ -11,7 +11,8 @@ router.get('/me/saved', ctrl.getSavedPosts);
 router.post('/me/save/:postId', ctrl.toggleSavePost); 
 router.post('/me/save/:postType/:postId', ctrl.toggleSavePost);
 router.post('/me/refresh-stats', ctrl.refreshStats);
-router.get('/:identifier', optionalAuth, ctrl.getPublicProfile);
 router.get('/:id/posts', optionalAuth, ctrl.getUserPosts);
+
+router.get('/:identifier', optionalAuth, ctrl.getPublicProfile);
 
 module.exports = router;

@@ -9,8 +9,7 @@ const mapsController = {
     return res.status(200).json({
       success: true,
       data: {
-        lost:  result.lost,
-        found: result.found,
+        posts:  result.posts,
         total: result.total,
         mode:  result.mode,
       },

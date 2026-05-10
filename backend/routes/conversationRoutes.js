@@ -12,9 +12,9 @@ const router = express.Router();
 router.use(protect);
 
 
-router.post("/", protect, createOrGetConversation);
-router.get("/", protect, getMyConversations);
-router.get("/:id", protect, getConversationById);
-router.delete("/:id", protect, deleteConversationForMe);
+router.post("/", createOrGetConversation);
+router.get("/",  getMyConversations);
+router.get("/:id",  getConversationById);
+router.delete("/:id",  deleteConversationForMe);
 
 module.exports = router;

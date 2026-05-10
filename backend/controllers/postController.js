@@ -33,6 +33,8 @@ const getAllPosts = async (req, res) => {
     } = req.query;
 
     const filter = {};
+    filter.status = status || "approved";
+filter.isResolved = false;
 
     if (type) filter.type = type;
     if (city) filter.city = city;
