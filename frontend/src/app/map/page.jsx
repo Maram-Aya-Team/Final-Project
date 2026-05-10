@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
 import MainLayout from "../../components/layout/MainLayout";
 import Select from "../../components/ui/Select";
 import Button from "../../components/ui/Button";
@@ -9,18 +8,6 @@ import Badge from "../../components/ui/Badge";
 import { getMapCities, getMapItems } from "../../services/mapService";
 
 const AMMAN_CENTER = { lat: 31.9539, lng: 35.9106 };
-const MAPBOX_STYLESHEET = "https://api.mapbox.com/mapbox-gl-js/v3.23.1/mapbox-gl.css";
-
-const ensureMapboxStylesheet = () => {
-  if (typeof document === "undefined") return;
-  if (document.querySelector("link[data-mapbox='true']")) return;
-
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = MAPBOX_STYLESHEET;
-  link.dataset.mapbox = "true";
-  document.head.appendChild(link);
-};
 
 const createPopupNode = (item) => {
   const wrapper = document.createElement("div");
@@ -42,6 +29,7 @@ export default function MapPage() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const leafletRef = useRef(null);
 
   const [cities, setCities] = useState([]);
   const [items, setItems] = useState([]);
@@ -65,9 +53,10 @@ export default function MapPage() {
   };
 
   const renderMarkers = useCallback(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !leafletRef.current) return;
 
     clearMarkers();
+    const L = leafletRef.current;
 
     items.forEach((item) => {
       const coordinates = item?.location?.coordinates;
@@ -85,12 +74,17 @@ export default function MapPage() {
       markerElement.style.border = "2px solid #ffffff";
       markerElement.style.boxShadow = "0 0 0 1px rgba(15,23,42,0.12)";
 
-      const popup = new mapboxgl.Popup({ offset: 18 }).setDOMContent(createPopupNode(item));
+      const popupContent = createPopupNode(item);
+      const popup = L.popup({ offset: [0, -12] }).setContent(popupContent);
 
-      const marker = new mapboxgl.Marker({ element: markerElement })
-        .setLngLat([lng, lat])
-        .setPopup(popup)
-        .addTo(mapRef.current);
+      const icon = L.divIcon({
+        className: "mapMarkerIcon",
+        html: markerElement.outerHTML,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      });
+
+      const marker = L.marker([lat, lng], { icon }).bindPopup(popup).addTo(mapRef.current);
 
       markersRef.current.push(marker);
     });
@@ -98,44 +92,47 @@ export default function MapPage() {
 
   useEffect(() => {
     let active = true;
-    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-    if (!token) {
-      Promise.resolve().then(() => {
-        if (active) setError("مفتاح Mapbox غير مضاف في إعدادات البيئة");
-      });
-      return () => {
-        active = false;
-      };
-    }
-
-    ensureMapboxStylesheet();
-    mapboxgl.accessToken = token;
 
     if (!mapContainerRef.current || mapRef.current) return undefined;
 
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [AMMAN_CENTER.lng, AMMAN_CENTER.lat],
-      zoom: 8,
-      attributionControl: false,
-    });
+    import("leaflet")
+      .then((leafletModule) => {
+        if (!active) return;
+        const L = leafletModule.default || leafletModule;
+        leafletRef.current = L;
 
-    mapRef.current.on("load", () => {
-      if (!active) return;
-      setMapReady(true);
-    });
+        mapRef.current = L.map(mapContainerRef.current, {
+          center: [AMMAN_CENTER.lat, AMMAN_CENTER.lng],
+          zoom: 8,
+          zoomControl: true,
+        });
 
-    mapRef.current.on("error", () => {
-      if (!active) return;
-      setError("تعذر تهيئة الخريطة");
-    });
+        const tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        });
+        tiles.addTo(mapRef.current);
+
+        tiles.on("load", () => {
+          if (!active) return;
+          setMapReady(true);
+        });
+
+        tiles.on("tileerror", () => {
+          if (!active) return;
+          setError("تعذر تهيئة الخريطة");
+        });
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("تعذر تحميل مكتبة الخريطة");
+      });
 
     return () => {
       active = false;
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
+      leafletRef.current = null;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -178,11 +175,7 @@ export default function MapPage() {
     if (!mapReady || !filters.city || !cityLookup[filters.city]) return;
 
     const city = cityLookup[filters.city];
-    mapRef.current.flyTo({
-      center: [city.lng, city.lat],
-      zoom: 11,
-      essential: true,
-    });
+    mapRef.current.flyTo([city.lat, city.lng], 11, { duration: 1.2 });
   }, [cityLookup, filters.city, mapReady]);
 
   const updateFilter = (key, value) => {
@@ -273,7 +266,7 @@ export default function MapPage() {
         </aside>
 
         <div className="mapCanvas card">
-          <div ref={mapContainerRef} className="mapboxRoot" />
+          <div ref={mapContainerRef} className="mapRoot" />
         </div>
       </section>
     </MainLayout>
