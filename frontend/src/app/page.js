@@ -19,10 +19,6 @@ import {
   getPosts,
 } from "../services/postService";
 
-/* ═════════════════════════════
-   بطاقة المنشور
-═════════════════════════════ */
-
 const PostCard = ({ post }) => {
 
   const isLost = post.type === "lost";
