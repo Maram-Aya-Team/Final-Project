@@ -743,3 +743,213 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   ✅ RESPONSIVE FIX PATCH - ADDED
+   هذا الجزء مضاف آخر الملف حتى يحل مشاكل الموبايل بدون ما يكسر الكود القديم.
+   ===================================================== */
+
+.shell {
+  width: min(1160px, calc(100% - 1.5rem));
+}
+
+.card,
+.skeletonCard,
+.postCard,
+.notificationCard,
+.conversationCard,
+.detailsGrid > div,
+.addressBlock,
+.authorBlock {
+  min-width: 0;
+}
+
+.btn {
+  width: auto;
+  max-width: 100%;
+}
+
+.authForm .btn,
+.authCard .btn {
+  width: 100%;
+}
+
+.navbar {
+  min-width: 0;
+  justify-content: space-between;
+}
+
+.navbarBrand {
+  white-space: nowrap;
+}
+
+.navbarLinks {
+  min-width: 0;
+}
+
+.navbarLinks a {
+  white-space: nowrap;
+}
+
+.navbarActions {
+  min-width: 0;
+}
+
+.heroRow {
+  min-width: 0;
+}
+
+.heroActions,
+.rowActions {
+  flex-wrap: wrap;
+}
+
+.postGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.searchFilters {
+  grid-template-columns: minmax(0, 2fr) minmax(130px, 1fr) minmax(130px, 1fr) auto;
+}
+
+.mapLayout {
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+}
+
+.mapCanvas,
+.mapRoot {
+  min-height: 420px;
+}
+
+.chatBubble {
+  max-width: min(72%, 620px);
+  overflow-wrap: anywhere;
+}
+
+.messageInput {
+  min-width: 0;
+}
+
+.messageInput input {
+  min-width: 0;
+}
+
+.adminTable {
+  min-width: 720px;
+}
+
+.tableWrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .navbarLinks {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.35rem;
+    flex-wrap: nowrap;
+  }
+
+  .mapLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .shell {
+    width: calc(100% - 1rem);
+  }
+
+  .pageWrap {
+    padding-top: 1rem;
+    gap: 1rem;
+  }
+
+  .navbar {
+    align-items: stretch;
+  }
+
+  .navbarBrand {
+    text-align: center;
+  }
+
+  .navbarActions,
+  .heroActions,
+  .rowActions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .heroRow,
+  .pageHeader.split,
+  .sectionHead,
+  .notificationCard,
+  .conversationCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroRow h1 {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+
+  .searchFilters,
+  .detailsGrid,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chatMessages {
+    min-height: 320px;
+    max-height: 60vh;
+  }
+
+  .chatBubble {
+    max-width: 88%;
+  }
+
+  .messageInput {
+    flex-direction: column;
+  }
+
+  .messageInput .btn,
+  .messageInput button {
+    width: 100%;
+  }
+
+  .adminLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .adminContent,
+  .adminHeader {
+    padding-inline: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbarActions,
+  .heroActions,
+  .rowActions {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .authCard {
+    padding: 0.9rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .chatBubble {
+    max-width: 94%;
+  }
+}

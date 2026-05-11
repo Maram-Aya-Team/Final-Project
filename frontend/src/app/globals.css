@@ -1689,3 +1689,381 @@ img {
   font-weight:700;
   color:#334155;
 }
+/* =====================================================
+   ✅ RESPONSIVE FIX PATCH - ADDED
+   ملاحظات: هذا الجزء مضاف آخر الملف حتى يعمل override للكلاسات المكررة فوق.
+   ===================================================== */
+
+/* ✅ يمنع ظهور scroll أفقي بسبب كروت/صور/نافبار واسعة */
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ✅ يخلي الصور ما تكسر الصفحة */
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ✅ حل مشكلة زر btn العام: لا تخليه width:100% بكل المشروع */
+.btn {
+  width: auto;
+  max-width: 100%;
+}
+
+/* ✅ فقط أزرار صفحات تسجيل الدخول تكون بعرض كامل */
+.authCard .btn,
+.authForm .btn {
+  width: 100%;
+}
+
+/* ✅ Hero موحد: Grid وليس Flex */
+.heroWrapper {
+  width: min(1350px, calc(100% - 24px));
+  margin: 20px auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  align-items: center;
+  gap: clamp(18px, 4vw, 40px);
+  padding: clamp(24px, 5vw, 56px);
+  border-radius: clamp(20px, 3vw, 32px);
+  min-height: auto;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 45%, #eef5ff 100%);
+}
+
+.heroContent {
+  min-width: 0;
+  max-width: 620px;
+}
+
+.heroTitle,
+.heroContent h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.15;
+}
+
+.heroDescription,
+.heroContent p {
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  line-height: 1.8;
+}
+
+.heroVisual {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.heroVisual img {
+  width: min(100%, 460px);
+  max-height: 360px;
+  object-fit: contain;
+}
+
+/* ✅ Search responsive */
+.searchContainer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: unset;
+  padding: 10px;
+  border-radius: 22px;
+  background: #fff;
+  border: 1px solid #dbe5ef;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.searchContainer input,
+.searchContainer select {
+  min-width: 0;
+  height: 52px;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.searchContainer input {
+  flex: 1 1 180px;
+}
+
+.searchContainer select {
+  flex: 0 0 130px;
+}
+
+.searchBtn {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 16px;
+}
+
+/* ✅ Posts grid آمن للموبايل */
+.postList,
+.postGrid {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(12px, 3vw, 32px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(16px, 2.5vw, 24px);
+}
+
+.singlePostCard,
+.postCard,
+.card {
+  min-width: 0;
+}
+
+.postImageContainer {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: none;
+  overflow: hidden;
+}
+
+.postImageContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.postActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.actionBtn {
+  flex: 1 1 130px;
+  min-width: 0;
+}
+
+/* ✅ Navbar responsive */
+.navbarWrapper {
+  padding-inline: clamp(10px, 3vw, 24px);
+}
+
+.navbar {
+  width: 100%;
+  max-width: 1350px;
+  margin-inline: auto;
+  min-width: 0;
+  gap: 14px;
+}
+
+.navbarBrand {
+  min-width: 0;
+  font-size: clamp(1.25rem, 3vw, 1.9rem);
+}
+
+.navbarLinks {
+  min-width: 0;
+}
+
+.navLink {
+  white-space: nowrap;
+}
+
+.navbarActions {
+  min-width: 0;
+}
+
+/* ✅ Notifications responsive */
+.notifCard,
+.notificationCard,
+.conversationCard {
+  min-width: 0;
+}
+
+.notifMainRow,
+.notifFooter {
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .navbarLinks {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .navbarActions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 992px) {
+  .heroWrapper {
+    grid-template-columns: 1fr;
+    text-align: center;
+    width: min(100% - 20px, 900px);
+  }
+
+  .heroContent {
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .heroDescription,
+  .heroContent p {
+    margin-inline: auto;
+  }
+
+  .heroVisual {
+    order: -1;
+  }
+
+  .heroVisual img {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .authPage {
+    flex-direction: column;
+  }
+
+  .authSide {
+    min-height: 260px;
+    padding: 28px 20px;
+  }
+
+  .authMain {
+    padding: 18px;
+    margin-top: -32px;
+  }
+
+  .authCard {
+    padding: 26px 18px;
+    border-radius: 22px;
+  }
+
+  .authAlt {
+    grid-template-columns: 1fr;
+  }
+
+  .heroWrapper {
+    padding: 26px 16px 34px;
+    border-radius: 22px;
+    margin-top: 12px;
+  }
+
+  .heroTitle,
+  .heroContent h1 {
+    font-size: clamp(1.8rem, 9vw, 2.6rem);
+  }
+
+  .searchContainer {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 18px;
+  }
+
+  .searchContainer input,
+  .searchContainer select,
+  .searchBtn {
+    width: 100%;
+    flex: none;
+  }
+
+  .postList,
+  .postGrid {
+    padding-inline: 12px;
+  }
+
+  .postHeader,
+  .postActions {
+    padding-inline: 14px;
+  }
+
+  .actionBtn {
+    flex-basis: calc(50% - 6px);
+  }
+
+  .navbar {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .navLink {
+    height: 44px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+  }
+
+  .navbarActions .btn,
+  .btnPrimary,
+  .btnOutline {
+    height: 44px;
+    padding-inline: 14px;
+    font-size: 0.9rem;
+  }
+
+  .notifContainer {
+    padding-inline: 12px;
+    margin-block: 24px;
+  }
+
+  .notifCard {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .notifMainRow,
+  .notifFooter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroVisual {
+    display: none;
+  }
+
+  .singlePostCard {
+    border-radius: 18px;
+  }
+
+  .postContent {
+    padding: 14px;
+  }
+
+  .actionBtn {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .navbarLinks {
+    justify-content: flex-start;
+  }
+
+  .navbarActions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .navbarActions .btn,
+  .btnPrimary,
+  .btnOutline {
+    width: 100%;
+  }
+}
