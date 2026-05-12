@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { loginUser, logoutUser, registerUser } from "../services/authService";
 
 const AuthContext = createContext(null);
@@ -23,18 +23,11 @@ const persistSession = (token, user) => {
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const savedUser = getSavedUser();
-
-    setAccessToken(token);
-    setUser(savedUser);
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState(() => getSavedUser());
+  const [accessToken, setAccessToken] = useState(() =>
+    localStorage.getItem("accessToken"),
+  );
+  const [loading] = useState(false);
 
   const applyAuthResponse = (data) => {
     const token = data?.accessToken || data?.token;

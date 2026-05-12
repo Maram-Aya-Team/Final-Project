@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useMemo } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import { normalizePost } from "../utils/normalizePost";
 import { useAuth } from "../context/AuthContext";
@@ -115,9 +115,6 @@ const PostCard = ({ post }) => {
 export default function Home() {
 
   const { isAuthenticated } = useAuth();
-
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const demoPosts = [
   {
@@ -402,26 +399,11 @@ export default function Home() {
   },
 ];
 
-  const loadPosts = useCallback(async () => {
-
-    if (!isAuthenticated) {
-      setPosts([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    setTimeout(() => {
-      setPosts(demoPosts.map(normalizePost));
-      setLoading(false);
-    }, 300);
-
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+  const posts = useMemo(
+    () => (isAuthenticated ? demoPosts.map(normalizePost) : []),
+    [isAuthenticated],
+  );
+  const loading = false;
 
   return (
     <MainLayout>

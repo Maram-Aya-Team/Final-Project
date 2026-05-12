@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AuthSuccessPage() {
+function AuthSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -19,4 +19,12 @@ export default function AuthSuccessPage() {
   }, [router, searchParams]);
 
   return <p>جاري تسجيل الدخول...</p>;
+}
+
+export default function AuthSuccessPage() {
+  return (
+    <Suspense fallback={<p>جاري تسجيل الدخول...</p>}>
+      <AuthSuccessContent />
+    </Suspense>
+  );
 }

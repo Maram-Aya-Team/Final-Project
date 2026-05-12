@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { API_BASE_URL, assertApiBaseUrl } from "../config/runtime";
 
 const isBrowser = typeof window !== "undefined";
 
@@ -51,6 +51,7 @@ const refreshAccessToken = async () => {
 const shouldSkipRefresh = (endpoint) => endpoint.startsWith("/auth/");
 
 export const apiRequest = async (endpoint, options = {}, retry = true) => {
+  assertApiBaseUrl();
   const token = getAccessToken();
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {

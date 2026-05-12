@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import { GOOGLE_AUTH_URL } from "../../config/runtime";
 import { Eye, EyeOff, Smartphone } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 
@@ -111,7 +112,7 @@ export default function LoginPage() {
           <div className="authAlt">
 <a
   className="authAltBtn"
-  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/auth/google`}
+  href={GOOGLE_AUTH_URL || "#"}
 >
   <FaGoogle color="#DB4437" /> Google
 </a>            <button className="authAltBtn"><Smartphone size={18} /> OTP</button>

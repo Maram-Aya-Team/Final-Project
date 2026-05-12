@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 import MainLayout from "../../components/layout/MainLayout";
@@ -298,17 +298,12 @@ const demoPosts = [
 
 export default function SearchPage() {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     keyword: "",
     city: "",
     type: "",
   });
-
-  useEffect(() => {
-    setPosts([]);
-    setLoading(false);
-  }, []);
 
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

@@ -1,22 +1,23 @@
 const Message = require("../models/message.schema");
 const Conversation = require("../models/conversation.schema");
+const logger = require("../utils/logger");
 
 const connectedUsers = new Map();
 
 const chatSocket = (io) => {
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    logger.debug("User connected", { socketId: socket.id });
 
     // تسجيل المستخدم
     socket.on("register", (userId) => {
       connectedUsers.set(userId, socket.id);
-      console.log("Registered user:", userId);
+      logger.debug("Registered user", { userId });
     });
 
     // دخول غرفة محادثة
     socket.on("joinConversation", (conversationId) => {
       socket.join(conversationId);
-      console.log(`Joined room: ${conversationId}`);
+      logger.debug("Joined conversation", { conversationId });
     });
 
     // إرسال رسالة realtime
@@ -28,28 +29,28 @@ const chatSocket = (io) => {
         const senderId = socket.userId;
 
         if (!senderId) {
-          console.log("No senderId found on socket");
+          logger.warn("No senderId found on socket");
           return;
         }
 
         if (!conversationId || !content) {
-          console.log("conversationId and content are required");
+          logger.warn("conversationId and content are required");
           return;
         }
 
         const conversation = await Conversation.findById(conversationId);
+
+        if (!conversation) {
+          logger.warn("Conversation not found", { conversationId });
+          return;
+        }
 
         const isParticipant = conversation.participants.some(
           (id) => id.toString() === senderId.toString(),
         );
 
         if (!isParticipant) {
-          console.log("User is not participant in this conversation");
-          return;
-        }
-
-        if (!conversation) {
-          console.log("Conversation not found");
+          logger.warn("User is not participant in this conversation", { senderId, conversationId });
           return;
         }
 
@@ -76,12 +77,12 @@ const chatSocket = (io) => {
 
         io.to(conversationId).emit("newMessage", populatedMessage);
       } catch (err) {
-        console.error(err);
+        logger.error("Failed to send realtime message", { message: err.message, stack: err.stack });
       }
     });
 
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
+      logger.debug("User disconnected", { socketId: socket.id });
 
       for (const [userId, socketId] of connectedUsers.entries()) {
         if (socketId === socket.id) {

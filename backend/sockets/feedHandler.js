@@ -1,7 +1,19 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 let io; 
 let feedHandlersAttached = false;
+
+const parseAllowedOrigins = () => {
+  const rawOrigins = process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "";
+  const parsed = rawOrigins
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (parsed.length > 0) return parsed;
+  return ['http://localhost:3000'];
+};
 
 function attachFeedHandlers() {
   if (!io || feedHandlersAttached) return;
@@ -23,7 +35,7 @@ function attachFeedHandlers() {
     });
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${socket.id}`);
+      logger.debug('Socket disconnected', { socketId: socket.id });
     });
   });
 }
@@ -31,7 +43,7 @@ function attachFeedHandlers() {
 function initSocket(httpServer) {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: parseAllowedOrigins(),
       methods: ['GET', 'POST'],
       credentials: true,
     },

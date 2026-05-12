@@ -1,154 +1,131 @@
-# 🔍 FounIT JO — Lost & Found Platform
+# FounIT JO
 
-<div align="center">
+Production-ready monorepo for a lost & found platform:
+- **Frontend**: Next.js (App Router) in `frontend/` (deploy to **Vercel**)
+- **Backend**: Express + Socket.IO + MongoDB in `backend/` (deploy to **Render**)
 
-![Platform](https://img.shields.io/badge/Platform-Lost%20%26%20Found-blue?style=for-the-badge)
-![Stack](https://img.shields.io/badge/Stack-MERN-green?style=for-the-badge)
-![Deployment](https://img.shields.io/badge/Deployment-Vercel%20%2B%20Render-purple?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)
+## Architecture
 
-**A modern full-stack platform for reporting, tracking, and recovering lost & found items**
+- Frontend uses `NEXT_PUBLIC_API_URL` for REST and Socket.IO connections.
+- Backend exposes REST APIs, WebSocket events, auth, and `/healthz` for health checks.
+- Backend enforces CORS via `CORS_ORIGINS`/`FRONTEND_URL`.
 
-🌐 [Live Deployment](#) | 📽️ [Demo Video](#)
-
-</div>
-
----
-
-# 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Screenshots](#-screenshots)
-- [Getting Started](#-getting-started)
-- [Environment Variables](#-environment-variables)
-- [Deployment](#-deployment)
-- [Production Checklist](#-production-checklist)
-- [Future Improvements](#-future-improvements)
-- [Team](#-team)
-- [Troubleshooting](#-troubleshooting)
-
----
-
-# 🌟 Overview
-
-FounIT JO is a full-stack Lost & Found platform designed to help users report lost items, publish found items, communicate securely, and locate posts using an interactive map system.
-
-The platform provides a modern and responsive user experience with authentication, real-time messaging, notifications, post management, profile system, and map-based filtering.
-
-Users can:
-- Report lost items
-- Publish found items
-- Search nearby locations
-- Chat with other users
-- Receive notifications
-- Manage personal profiles and posts
-
-The system is built using the MERN stack with scalable deployment support using Vercel and Render.
-
----
-
-# ✨ Features
-
-## 👤 Authentication System
-- User registration and login
-- JWT authentication
-- Persistent login sessions
-- Protected routes
-- Google OAuth support
-
-## 📝 Posts System
-- Create lost/found posts
-- Upload item details and location
-- Browse public feed
-- View single post details
-- User-owned posts management
-
-## 🗺️ Interactive Map
-- Map integration using Leaflet + OpenStreetMap
-- Location-based filtering
-- Visual markers for lost/found items
-- Dynamic search area support
-
-## 💬 Messaging System
-- Real-time chat using Socket.IO
-- User conversations
-- Live message updates
-
-## 🔔 Notifications
-- Real-time notifications
-- Read/unread system
-- Notification management page
-
-## 👤 Profile System
-- User profile management
-- Saved posts
-- Account customization
-
-## 🛡️ Admin Features
-- Reports monitoring
-- Fraud detection modules
-- Admin dashboard support
-
-## 🎨 UI / UX
-- Responsive modern design
-- Mobile-friendly layout
-- Arabic-first interface
-- Clean and interactive user experience
-
----
-
-# 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js, React, CSS Modules |
-| Backend | Node.js, Express |
-| Database | MongoDB, Mongoose |
-| Authentication | JWT, Google OAuth |
-| Maps | Leaflet, OpenStreetMap |
-| Realtime | Socket.IO |
-| Deployment | Vercel, Render |
-
----
-
-# 🏗️ Architecture
-
-- Frontend communicates with backend using REST APIs.
-- Authentication handled using JWT access tokens and refresh tokens.
-- Socket.IO powers realtime messaging and notifications.
-- MongoDB stores users, posts, messages, reports, and notifications.
-- Leaflet + OpenStreetMap provide interactive location visualization.
-- Environment variables manage production configuration securely.
-
----
-
-# 📁 Project Structure
+## Repository Structure
 
 ```text
 founIT/
-├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── sockets/
-│   ├── utils/
-│   └── server.js
-│
-├── frontend/
-│   ├── public/
-│   └── src/
-│       ├── app/
-│       ├── components/
-│       ├── context/
-│       ├── services/
-│       ├── styles/
-│       └── hooks/
-│
-└── README.md
+├── frontend/     # Next.js app (Vercel)
+├── backend/      # Express API + Socket.IO (Render)
+├── render.yaml   # Render service blueprint
+└── .env.example  # Combined env reference
+```
+
+## Package Manager
+
+This repo uses **npm** (`package-lock.json` is present in both apps).
+
+## Environment Variables
+
+### Frontend (`frontend/.env.local`)
+
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
+```
+
+### Backend (`backend/.env`)
+
+```env
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=mongodb+srv://<user>:<pass>@<cluster>/<db>
+JWT_SECRET=<strong-random-secret>
+FRONTEND_URL=https://your-vercel-app.vercel.app
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=https://your-render-backend.onrender.com/auth/google/callback
+```
+
+> You can also start from the root `.env.example`.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+cd frontend && npm ci
+cd ../backend && npm ci
+```
+
+Run backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Run frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+## Build & Validation
+
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+Backend:
+
+```bash
+cd backend
+npm test   # currently placeholder script
+npm start
+```
+
+Health check:
+
+```bash
+GET /healthz
+```
+
+## Deploy to Vercel (Frontend)
+
+1. Import repository in Vercel.
+2. Set **Root Directory** to `frontend`.
+3. Add env var:
+   - `NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com`
+4. Deploy.
+
+`frontend/vercel.json` is included with build/install commands and security headers.
+
+## Deploy to Render (Backend)
+
+### Option A (Recommended): Blueprint
+
+1. In Render, create service from this repo using `render.yaml`.
+2. Ensure env vars are filled (all `sync: false` values).
+3. Deploy and verify:
+   - `https://<service>.onrender.com/healthz`
+
+### Option B: Manual Web Service
+
+- Root directory: `backend`
+- Build command: `npm ci`
+- Start command: `npm start`
+- Health check path: `/healthz`
+
+## Production Notes
+
+- No production localhost API fallbacks are used.
+- Frontend will fail API calls if `NEXT_PUBLIC_API_URL` is missing.
+- Backend exits in production when CORS origins are not configured.
+- Security headers are configured in Next.js and Vercel.
+- Logging is structured and production-safe in touched backend services.
+
