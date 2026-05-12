@@ -4,13 +4,13 @@ import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
   title: {
-    default: "FounIT JO",
-    template: "%s | FounIT JO",
+    default: "FounIt JO",
+    template: "%s | FounIt JO",
   },
   description: "منصة أردنية للمفقودات والموجودات مع خرائط وتواصل لحظي.",
   keywords: ["Lost and Found", "Jordan", "FounIT", "مفقودات", "موجودات"],
   openGraph: {
-    title: "FounIT JO",
+    title: "FounIt JO",
     description: "منصة أردنية للمفقودات والموجودات مع خرائط وتواصل لحظي.",
     type: "website",
   },

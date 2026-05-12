@@ -24,31 +24,23 @@ const { initNotificationSocket } = require('./sockets/notificationHandler');
 const { bindSocketServer } = require('./sockets/feedHandler');
 const chatSocket = require("./sockets/chatSocket");
 const logger = require("./utils/logger");
+const { parseAllowedOrigins, isOriginAllowed } = require("./utils/cors");
 require("./config/google");
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
+const configuredOrigins = parseAllowedOrigins({ allowLocalFallback: false });
 
-const parseAllowedOrigins = () => {
-  const rawOrigins = process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "";
-  return rawOrigins
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-};
-
-const allowedOrigins = parseAllowedOrigins();
-
-if (isProduction && allowedOrigins.length === 0) {
+if (isProduction && configuredOrigins.length === 0) {
   logger.error("Failed to start: set CORS_ORIGINS or FRONTEND_URL in production");
   process.exit(1);
 }
 
-const corsOrigins =
-  allowedOrigins.length > 0 ? allowedOrigins : ["http://localhost:3000"];
-const isOriginAllowed = (origin) => !origin || corsOrigins.includes(origin);
+const corsOrigins = isProduction
+  ? configuredOrigins
+  : parseAllowedOrigins();
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -60,7 +52,7 @@ app.use(cookieParser());
 app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(cors({
   origin(origin, callback) {
-    if (isOriginAllowed(origin)) {
+    if (isOriginAllowed(origin, corsOrigins)) {
       callback(null, true);
       return;
     }

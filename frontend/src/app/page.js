@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import { normalizePost } from "../utils/normalizePost";
 import { useAuth } from "../context/AuthContext";
@@ -399,10 +398,7 @@ export default function Home() {
   },
 ];
 
-  const posts = useMemo(
-    () => (isAuthenticated ? demoPosts.map(normalizePost) : []),
-    [isAuthenticated],
-  );
+  const posts = isAuthenticated ? demoPosts.map(normalizePost) : [];
   const loading = false;
 
   return (

@@ -4,8 +4,10 @@ import { createContext, useContext, useState } from "react";
 import { loginUser, logoutUser, registerUser } from "../services/authService";
 
 const AuthContext = createContext(null);
+const isBrowser = typeof window !== "undefined";
 
 const getSavedUser = () => {
+  if (!isBrowser) return null;
   const rawUser = localStorage.getItem("user");
 
   if (!rawUser) return null;
@@ -18,6 +20,7 @@ const getSavedUser = () => {
 };
 
 const persistSession = (token, user) => {
+  if (!isBrowser) return;
   if (token) localStorage.setItem("accessToken", token);
   if (user) localStorage.setItem("user", JSON.stringify(user));
 };
@@ -25,7 +28,7 @@ const persistSession = (token, user) => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getSavedUser());
   const [accessToken, setAccessToken] = useState(() =>
-    localStorage.getItem("accessToken"),
+    isBrowser ? localStorage.getItem("accessToken") : null,
   );
   const [loading] = useState(false);
 
@@ -58,8 +61,10 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await logoutUser();
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
+    if (isBrowser) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+    }
 
     setUser(null);
     setAccessToken(null);

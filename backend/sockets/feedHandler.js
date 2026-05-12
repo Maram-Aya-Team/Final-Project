@@ -1,19 +1,9 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const { parseAllowedOrigins } = require('../utils/cors');
 let io; 
 let feedHandlersAttached = false;
-
-const parseAllowedOrigins = () => {
-  const rawOrigins = process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "";
-  const parsed = rawOrigins
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  if (parsed.length > 0) return parsed;
-  return ['http://localhost:3000'];
-};
 
 function attachFeedHandlers() {
   if (!io || feedHandlersAttached) return;
